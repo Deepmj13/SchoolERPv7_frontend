@@ -1,0 +1,50 @@
+class Endpoints {
+  Endpoints._();
+
+  static const String baseUrl = 'https://renderbackned.onrender.com';
+  static const String apiPrefix = '/api';
+
+  static const String login = '$apiPrefix/auth/login';
+  static const String refresh = '$apiPrefix/auth/refresh';
+  static const String changePassword = '$apiPrefix/auth/change-password';
+
+  static const String dashboardStats = '$apiPrefix/admin/dashboard/stats';
+
+  static const String students = '$apiPrefix/students';
+  static String student(String id) => '$apiPrefix/students/$id';
+  static String activateStudent(String id) =>
+      '$apiPrefix/students/$id/activate';
+
+  static const String teachers = '$apiPrefix/teachers';
+  static String teacher(String id) => '$apiPrefix/teachers/$id';
+  static String teacherClasses(String id) => '$apiPrefix/teachers/$id/classes';
+
+  static const String classes = '$apiPrefix/classes';
+  static String classById(String id) => '$apiPrefix/classes/$id';
+  static String classStudents(String id) => '$apiPrefix/classes/$id/students';
+  static String classTimetable(String id) => '$apiPrefix/classes/$id/timetable';
+
+  static const String attendanceMark = '$apiPrefix/attendance/mark';
+  static const String attendance = '$apiPrefix/attendance';
+  static String attendanceRecord(String id) => '$apiPrefix/attendance/$id';
+  static String studentAttendance(String id) =>
+      '$apiPrefix/attendance/student/$id';
+
+  static const String subjects = '$apiPrefix/subjects';
+  static String assignSubject(String id) => '$apiPrefix/subjects/$id/assign';
+
+  static const String exams = '$apiPrefix/exams';
+  static String exam(String id) => '$apiPrefix/exams/$id';
+  static String publishExam(String id) => '$apiPrefix/exams/$id/publish';
+
+  static const String timetable = '$apiPrefix/timetable';
+  static String timetableEntry(String id) => '$apiPrefix/timetable/$id';
+
+  static const String feeStructures = '$apiPrefix/fees/structures';
+  static const String feesPending = '$apiPrefix/fees/pending';
+  static const String feesPayments = '$apiPrefix/fees/payments';
+  static String studentFees(String id) => '$apiPrefix/fees/student/$id';
+
+  static const String announcements = '$apiPrefix/announcements';
+  static String announcement(String id) => '$apiPrefix/announcements/$id';
+}
