@@ -52,6 +52,14 @@ void showMoreMenu(BuildContext context) {
               },
             ),
             _MoreItem(
+              icon: Icons.notifications_rounded,
+              label: 'Notices',
+              onTap: () {
+                Navigator.pop(ctx);
+                context.go('/teacher/notices');
+              },
+            ),
+            _MoreItem(
               icon: Icons.person_rounded,
               label: 'Profile',
               onTap: () {

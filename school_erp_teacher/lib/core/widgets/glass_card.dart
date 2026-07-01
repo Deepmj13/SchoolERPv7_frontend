@@ -33,16 +33,15 @@ class GlassCard extends StatelessWidget {
       ),
       child: child,
     );
-    if (onTap != null) {
-      return Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: card,
-        ),
-      );
-    }
-    return card;
+    return Material(
+      type: MaterialType.transparency,
+      child: onTap != null
+          ? InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(16),
+              child: card,
+            )
+          : card,
+    );
   }
 }

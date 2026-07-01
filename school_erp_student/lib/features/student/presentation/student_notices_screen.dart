@@ -45,8 +45,96 @@ class StudentNoticesScreen extends ConsumerWidget {
     );
   }
 
+  void _showNoticeSheet(BuildContext context, Notice notice) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.backgroundDark
+          : AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: notice.isSchoolWide
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : AppColors.info.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    notice.isSchoolWide ? 'School' : 'Class',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: notice.isSchoolWide
+                          ? AppColors.primary
+                          : AppColors.info,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(notice.title,
+                style: Theme.of(context).textTheme.titleLarge),
+            if (notice.body != null && notice.body!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(notice.body!,
+                  style: Theme.of(context).textTheme.bodyLarge),
+            ],
+            const SizedBox(height: 16),
+            if (notice.createdByEmail != null) ...[
+              Row(
+                children: [
+                  const Icon(Icons.person_outline,
+                      size: 14, color: AppColors.textSecondary),
+                  const SizedBox(width: 6),
+                  Text(notice.createdByEmail!,
+                      style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
+              const SizedBox(height: 4),
+            ],
+            Row(
+              children: [
+                const Icon(Icons.calendar_today,
+                    size: 14, color: AppColors.textSecondary),
+                const SizedBox(width: 6),
+                Text(_formatDate(notice.createdAt),
+                    style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _noticeCard(BuildContext context, Notice notice) {
     return GlassCard(
+      onTap: () => _showNoticeSheet(context, notice),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -85,13 +173,24 @@ class StudentNoticesScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.bodyMedium),
           ],
           const SizedBox(height: 8),
-          Text(notice.createdAt,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(fontSize: 12)),
+          Text(
+            _formatDate(notice.createdAt),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontSize: 12),
+          ),
         ],
       ),
     );
+  }
+
+  String _formatDate(String dateStr) {
+    try {
+      final dt = DateTime.parse(dateStr);
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return dateStr;
+    }
   }
 }

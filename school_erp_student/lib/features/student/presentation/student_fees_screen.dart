@@ -66,7 +66,7 @@ class StudentFeesScreen extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            '\$${s.amount.toStringAsFixed(2)}',
+                            '₹${s.amount.toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -100,7 +100,7 @@ class StudentFeesScreen extends ConsumerWidget {
                                     CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '\$${p.amount.toStringAsFixed(2)}',
+                                    '₹${p.amount.toStringAsFixed(2)}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium,
@@ -141,7 +141,7 @@ class StudentFeesScreen extends ConsumerWidget {
                 const Icon(Icons.check_circle,
                     color: AppColors.success, size: 32),
                 const SizedBox(height: 8),
-                Text('\$${data.totalPaid.toStringAsFixed(2)}',
+                Text('₹${data.totalPaid.toStringAsFixed(2)}',
                     style:
                         Theme.of(context).textTheme.titleMedium),
                 Text('Paid',
@@ -158,7 +158,7 @@ class StudentFeesScreen extends ConsumerWidget {
                 const Icon(Icons.pending,
                     color: AppColors.warning, size: 32),
                 const SizedBox(height: 8),
-                Text('\$${data.totalPending.toStringAsFixed(2)}',
+                Text('₹${data.totalPending.toStringAsFixed(2)}',
                     style:
                         Theme.of(context).textTheme.titleMedium),
                 Text('Pending',

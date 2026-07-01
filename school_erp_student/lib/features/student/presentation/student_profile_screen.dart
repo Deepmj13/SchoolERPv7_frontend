@@ -59,23 +59,24 @@ class StudentProfileScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       _profileRow(
+                          context,
                           Icons.badge_outlined,
                           'Roll No',
                           profile.rollNumber ?? 'N/A'),
                       const Divider(height: 1),
-                      _profileRow(Icons.school_outlined, 'Class',
+                      _profileRow(context, Icons.school_outlined, 'Class',
                           profile.className ?? 'N/A'),
                       const Divider(height: 1),
-                      _profileRow(Icons.group_outlined, 'Section',
+                      _profileRow(context, Icons.group_outlined, 'Section',
                           profile.classSection ?? 'N/A'),
                       if (profile.parentName != null) ...[
                         const Divider(height: 1),
-                        _profileRow(Icons.people_outlined,
+                        _profileRow(context, Icons.people_outlined,
                             'Parent', profile.parentName!),
                       ],
                       if (profile.parentPhone != null) ...[
                         const Divider(height: 1),
-                        _profileRow(Icons.phone_outlined, 'Contact',
+                        _profileRow(context, Icons.phone_outlined, 'Contact',
                             profile.parentPhone!),
                       ],
                     ],
@@ -123,7 +124,8 @@ class StudentProfileScreen extends ConsumerWidget {
     );
   }
 
-  Widget _profileRow(IconData icon, String label, String value) {
+  Widget _profileRow(
+      BuildContext context, IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -132,14 +134,13 @@ class StudentProfileScreen extends ConsumerWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(label,
-                style: const TextStyle(
-                    fontSize: 14, color: AppColors.textSecondary)),
+                style: Theme.of(context).textTheme.bodyMedium),
           ),
           Text(value,
-              style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary)),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(fontWeight: FontWeight.w500)),
         ],
       ),
     );

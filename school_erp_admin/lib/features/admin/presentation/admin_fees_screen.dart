@@ -116,7 +116,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                 ColumnDefinition<FeeStructure>(
                   header: 'Amount',
                   sortable: true,
-                  displayValue: (s) => '\$${s.amount.toStringAsFixed(2)}',
+                  displayValue: (s) => '₹${s.amount.toStringAsFixed(2)}',
                 ),
                 ColumnDefinition<FeeStructure>(
                   header: 'Class',
@@ -198,7 +198,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                           ),
                         ),
                         Text(
-                          '\$${s.amount.toStringAsFixed(2)}',
+                          '₹${s.amount.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -250,7 +250,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
           ColumnDefinition<FeePayment>(
             header: 'Amount',
             sortable: true,
-            displayValue: (p) => '\$${p.amountPaid.toStringAsFixed(2)}',
+            displayValue: (p) => '₹${p.amountPaid.toStringAsFixed(2)}',
           ),
           ColumnDefinition<FeePayment>(
             header: 'Date',
@@ -332,7 +332,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                           ),
                         ),
                         Text(
-                          '\$${p.amountPaid.toStringAsFixed(2)}',
+                          '₹${p.amountPaid.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -408,7 +408,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                   controller: amountCtrl,
                   decoration: const InputDecoration(
                     labelText: 'Amount *',
-                    prefixText: '\$ ',
+                    prefixText: '₹ ',
                     prefixIcon: Icon(Icons.attach_money),
                   ),
                   keyboardType: TextInputType.number,
@@ -536,7 +536,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                       controller: amountCtrl,
                       decoration: const InputDecoration(
                         labelText: 'Amount',
-                        prefixText: '\$ ',
+                        prefixText: '₹ ',
                       ),
                       keyboardType: TextInputType.number,
                     ),

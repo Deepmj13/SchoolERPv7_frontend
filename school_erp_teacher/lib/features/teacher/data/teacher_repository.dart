@@ -150,6 +150,14 @@ class TeacherRepository {
     });
   }
 
+  Future<List<Announcement>> getNotices() async {
+    final raw = await _api.get(Endpoints.announcements);
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list
+        .map((e) => Announcement.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<TeacherProfile> getTeacherProfile(String teacherId) async {
     final data = await _api.get(Endpoints.teacherProfile(teacherId));
     return TeacherProfile.fromJson(data as Map<String, dynamic>);
