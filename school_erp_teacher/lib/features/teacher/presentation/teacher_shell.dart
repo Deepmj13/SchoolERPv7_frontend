@@ -100,6 +100,7 @@ class TeacherShell extends ConsumerWidget {
 
   int _navIndex(String route) {
     if (route == '/teacher/marks' ||
+        route == '/teacher/assignments' ||
         route == '/teacher/announcements' ||
         route == '/teacher/profile') {
       return 2;

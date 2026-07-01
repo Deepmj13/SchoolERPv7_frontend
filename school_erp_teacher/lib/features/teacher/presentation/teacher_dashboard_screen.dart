@@ -295,6 +295,25 @@ Widget _quickActions(BuildContext context) {
           const SizedBox(width: 12),
           Expanded(
             child: GlassCard(
+              onTap: () => context.go('/teacher/assignments'),
+              child: Column(
+                children: [
+                  Icon(Icons.assignment_rounded,
+                      color: AppColors.success, size: 32),
+                  const SizedBox(height: 8),
+                  Text('Assignments',
+                      style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          Expanded(
+            child: GlassCard(
               onTap: () => context.go('/teacher/announcements'),
               child: Column(
                 children: [

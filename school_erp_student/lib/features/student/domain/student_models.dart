@@ -210,6 +210,9 @@ class Assignment {
   final String? dueDate;
   final String status;
   final String? grade;
+  final String? submissionStatus;
+  final String? teacherRemarks;
+  final String? submissionUpdatedAt;
 
   Assignment({
     required this.id,
@@ -219,6 +222,9 @@ class Assignment {
     this.dueDate,
     required this.status,
     this.grade,
+    this.submissionStatus,
+    this.teacherRemarks,
+    this.submissionUpdatedAt,
   });
 
   factory Assignment.fromJson(Map<String, dynamic> json) => Assignment(
@@ -229,6 +235,9 @@ class Assignment {
         dueDate: json['due_date'] as String?,
         status: json['status'] as String? ?? 'pending',
         grade: json['grade'] as String?,
+        submissionStatus: json['submission_status'] as String?,
+        teacherRemarks: json['teacher_remarks'] as String?,
+        submissionUpdatedAt: json['submission_updated_at'] as String?,
       );
 }
 

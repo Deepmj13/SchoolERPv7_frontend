@@ -28,6 +28,14 @@ void showMoreMenu(BuildContext context) {
               ),
             ),
             _MoreItem(
+              icon: Icons.assignment_rounded,
+              label: 'Assignments',
+              onTap: () {
+                Navigator.pop(ctx);
+                context.go('/teacher/assignments');
+              },
+            ),
+            _MoreItem(
               icon: Icons.scoreboard_rounded,
               label: 'Marks',
               onTap: () {

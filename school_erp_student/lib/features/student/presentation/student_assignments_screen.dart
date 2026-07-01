@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
@@ -49,13 +50,17 @@ class StudentAssignmentsScreen extends ConsumerWidget {
       BuildContext context, Assignment assignment) {
     final statusColors = {
       'pending': AppColors.warning,
+      'done': AppColors.success,
+      'late': AppColors.error,
       'submitted': AppColors.info,
       'graded': AppColors.success,
     };
+    final displayStatus = assignment.submissionStatus ?? assignment.status;
     final color =
-        statusColors[assignment.status] ?? AppColors.textSecondary;
+        statusColors[displayStatus] ?? AppColors.textSecondary;
 
     return GlassCard(
+      onTap: () => context.go('/student/assignments/${assignment.id}'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -74,7 +79,7 @@ class StudentAssignmentsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  assignment.status.toUpperCase(),
+                  displayStatus.toUpperCase(),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

@@ -6,6 +6,8 @@ import 'package:school_erp_teacher/features/teacher/presentation/teacher_announc
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_attendance_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_dashboard_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_marks_screen.dart';
+import 'package:school_erp_teacher/features/teacher/presentation/teacher_assignment_detail_screen.dart';
+import 'package:school_erp_teacher/features/teacher/presentation/teacher_assignments_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_profile_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_shell.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_timetable_screen.dart';
@@ -56,6 +58,18 @@ GoRouter createRouter(StorageService storage) {
             path: '/teacher/announcements',
             name: RouteNames.teacherAnnouncements,
             builder: (context, state) => const TeacherAnnouncementsScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/assignments',
+            name: RouteNames.teacherAssignments,
+            builder: (context, state) => const TeacherAssignmentsScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/assignments/:id',
+            name: RouteNames.teacherAssignmentDetail,
+            builder: (context, state) => TeacherAssignmentDetailScreen(
+              assignmentId: state.pathParameters['id'] ?? '',
+            ),
           ),
           GoRoute(
             path: '/teacher/profile',

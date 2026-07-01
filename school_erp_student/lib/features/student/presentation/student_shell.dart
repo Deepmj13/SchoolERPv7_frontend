@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:school_erp_student/features/student/presentation/widgets/back_button_handler.dart';
 import 'package:school_erp_student/features/student/presentation/widgets/student_bottom_nav.dart';
 import 'package:school_erp_student/features/student/presentation/widgets/student_sidebar_nav.dart';
 
@@ -37,7 +38,12 @@ class StudentShell extends ConsumerWidget {
           onLogout: () => _logout(context, ref),
         ),
         const VerticalDivider(width: 1, thickness: 1),
-        Expanded(child: child),
+        Expanded(
+          child: BackButtonHandler(
+            currentRoute: currentRoute,
+            child: child,
+          ),
+        ),
       ],
     );
   }
@@ -47,7 +53,10 @@ class StudentShell extends ConsumerWidget {
     final currentIndex = _navIndex(currentRoute);
 
     return Scaffold(
-      body: child,
+      body: BackButtonHandler(
+        currentRoute: currentRoute,
+        child: child,
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
         onDestinationSelected: (index) {

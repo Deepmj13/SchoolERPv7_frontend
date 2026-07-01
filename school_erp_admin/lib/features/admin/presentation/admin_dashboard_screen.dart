@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
@@ -23,45 +22,17 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
-  DateTime? _lastBackPress;
-
-  Future<bool> _onPop() async {
-    final now = DateTime.now();
-    if (_lastBackPress == null || now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
-      _lastBackPress = now;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Press back again to exit'),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return false;
-    }
-    return true;
-  }
-
   @override
   Widget build(BuildContext context) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final isMobile = context.isMobile;
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) async {
-        if (didPop) return;
-        final shouldPop = await _onPop();
-        if (shouldPop && context.mounted) {
-          SystemNavigator.pop();
-        }
-      },
-      child: statsAsync.when(
-        loading: () => _buildLoading(context, isMobile),
-        error: (e, _) => _buildError(context, ref, e, isMobile),
-        data: (stats) => RefreshIndicator(
-          onRefresh: () => ref.refresh(dashboardStatsProvider.future),
-          child: _buildContent(context, stats, isMobile),
-        ),
+    return statsAsync.when(
+      loading: () => _buildLoading(context, isMobile),
+      error: (e, _) => _buildError(context, ref, e, isMobile),
+      data: (stats) => RefreshIndicator(
+        onRefresh: () => ref.refresh(dashboardStatsProvider.future),
+        child: _buildContent(context, stats, isMobile),
       ),
     );
   }

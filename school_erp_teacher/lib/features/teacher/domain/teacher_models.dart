@@ -299,6 +299,69 @@ class DashboardData {
   });
 }
 
+class Assignment {
+  final String id;
+  final String title;
+  final String? description;
+  final String subjectName;
+  final String className;
+  final String section;
+  final String? dueDate;
+  final String createdAt;
+
+  Assignment({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.subjectName,
+    required this.className,
+    required this.section,
+    this.dueDate,
+    required this.createdAt,
+  });
+
+  factory Assignment.fromJson(Map<String, dynamic> json) => Assignment(
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        description: json['description'] as String?,
+        subjectName: json['subject_name'] as String? ?? '',
+        className: json['class_name'] as String? ?? '',
+        section: json['section'] as String? ?? '',
+        dueDate: json['due_date'] as String?,
+        createdAt: json['created_at'] as String? ?? '',
+      );
+
+  String get classDisplay => '$className - $section';
+}
+
+class AssignmentSubmission {
+  final String id;
+  final String studentId;
+  final String studentName;
+  final String? rollNumber;
+  String status;
+  String? remarks;
+
+  AssignmentSubmission({
+    required this.id,
+    required this.studentId,
+    required this.studentName,
+    this.rollNumber,
+    this.status = 'pending',
+    this.remarks,
+  });
+
+  factory AssignmentSubmission.fromJson(Map<String, dynamic> json) =>
+      AssignmentSubmission(
+        id: json['id'] as String? ?? '',
+        studentId: json['student_id'] as String? ?? '',
+        studentName: json['student_name'] as String? ?? '',
+        rollNumber: json['roll_number'] as String?,
+        status: json['status'] as String? ?? 'pending',
+        remarks: json['remarks'] as String?,
+      );
+}
+
 class MarkEntry {
   final String studentId;
   final String studentName;

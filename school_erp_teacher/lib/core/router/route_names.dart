@@ -7,5 +7,7 @@ class RouteNames {
   static const String teacherMarks = 'teacherMarks';
   static const String teacherTimetable = 'teacherTimetable';
   static const String teacherAnnouncements = 'teacherAnnouncements';
+  static const String teacherAssignments = 'teacherAssignments';
+  static const String teacherAssignmentDetail = 'teacherAssignmentDetail';
   static const String teacherProfile = 'teacherProfile';
 }

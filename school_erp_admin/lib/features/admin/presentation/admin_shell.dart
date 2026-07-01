@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:school_erp_admin/core/connectivity/connectivity_provider.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/back_button_handler.dart';
 import 'package:school_erp_admin/features/admin/presentation/widgets/sidebar_nav.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_ui_provider.dart';
 import 'package:school_erp_admin/features/auth/presentation/providers/auth_state_provider.dart';
@@ -42,7 +43,12 @@ class AdminShell extends ConsumerWidget {
           },
         ),
         const VerticalDivider(width: 1, thickness: 1),
-        Expanded(child: _contentArea(context, ref)),
+        Expanded(
+          child: BackButtonHandler(
+            currentRoute: currentRoute,
+            child: _contentArea(context, ref),
+          ),
+        ),
       ],
     );
   }
@@ -61,7 +67,12 @@ class AdminShell extends ConsumerWidget {
           },
         ),
         const VerticalDivider(width: 1, thickness: 1),
-        Expanded(child: _contentArea(context, ref)),
+        Expanded(
+          child: BackButtonHandler(
+            currentRoute: currentRoute,
+            child: _contentArea(context, ref),
+          ),
+        ),
       ],
     );
   }
@@ -164,7 +175,12 @@ class _MobileLayoutState extends State<_MobileLayout> {
                   ],
                 ),
               ),
-            Expanded(child: widget.child),
+            Expanded(
+              child: BackButtonHandler(
+                currentRoute: currentRoute,
+                child: widget.child,
+              ),
+            ),
           ],
         ),
       ),

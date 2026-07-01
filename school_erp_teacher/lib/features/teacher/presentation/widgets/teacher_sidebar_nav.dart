@@ -62,6 +62,12 @@ class TeacherSidebarNav extends StatelessWidget {
               isActive: currentRoute == '/teacher/attendance',
             ),
             _NavItem(
+              icon: Icons.assignment_rounded,
+              label: 'Assignments',
+              route: '/teacher/assignments',
+              isActive: currentRoute.startsWith('/teacher/assignments'),
+            ),
+            _NavItem(
               icon: Icons.scoreboard_rounded,
               label: 'Marks',
               route: '/teacher/marks',

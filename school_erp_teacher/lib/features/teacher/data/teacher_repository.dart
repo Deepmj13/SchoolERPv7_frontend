@@ -113,6 +113,43 @@ class TeacherRepository {
         .toList();
   }
 
+  Future<List<Assignment>> getAssignments(String teacherId) async {
+    final raw = await _api.get(Endpoints.assignments,
+        queryParams: {'teacherId': teacherId});
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list
+        .map((e) => Assignment.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<Assignment> createAssignment(
+      String title, String? description, String? dueDate,
+      String classId, String subjectId) async {
+    final data = await _api.post(Endpoints.assignments, body: {
+      'title': title,
+      if (description != null) 'description': description,
+      if (dueDate != null) 'due_date': dueDate,
+      'class_id': classId,
+      'subject_id': subjectId,
+    });
+    return Assignment.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<List<AssignmentSubmission>> getAssignmentSubmissions(
+      String assignmentId) async {
+    final data = await _api.get(Endpoints.assignmentSubmissions(assignmentId));
+    return (data as List)
+        .map((e) => AssignmentSubmission.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> bulkUpdateSubmissions(String assignmentId,
+      List<Map<String, dynamic>> submissions) async {
+    await _api.put(Endpoints.assignmentSubmissions(assignmentId), body: {
+      'submissions': submissions,
+    });
+  }
+
   Future<TeacherProfile> getTeacherProfile(String teacherId) async {
     final data = await _api.get(Endpoints.teacherProfile(teacherId));
     return TeacherProfile.fromJson(data as Map<String, dynamic>);

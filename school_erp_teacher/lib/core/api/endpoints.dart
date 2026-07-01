@@ -39,6 +39,8 @@ class Endpoints {
 
   static const String assignments = '$apiPrefix/assignments';
   static String assignment(String id) => '$apiPrefix/assignments/$id';
+  static String assignmentSubmissions(String id) =>
+      '$apiPrefix/assignments/$id/submissions';
 
   static const String timetable = '$apiPrefix/timetable';
   static String timetableEntry(String id) => '$apiPrefix/timetable/$id';
