@@ -1,12 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/api/api_client.dart';
+import 'package:school_erp_student/core/api/security_client_default.dart'
+    if (dart.library.io) 'package:school_erp_student/core/api/security_client_io.dart';
+import 'package:school_erp_student/core/storage/storage_interface.dart';
 import 'package:school_erp_student/core/storage/storage_service.dart';
 import 'package:school_erp_student/features/auth/data/auth_repository.dart';
 import 'package:school_erp_student/features/auth/domain/user_model.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(storageServiceProvider);
-  return ApiClient(storage: storage);
+  final secureClient = createSecureClient();
+  final client = secureClient != null
+      ? ApiClient(storage: storage, client: secureClient)
+      : ApiClient(storage: storage);
+  ref.onDispose(client.dispose);
+  return client;
 });
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -48,7 +56,7 @@ class AuthState {
 
 class AuthStateNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
-  final StorageService _storage;
+  final StorageInterface _storage;
 
   AuthStateNotifier(this._authRepository, this._storage)
       : super(const AuthState()) {
@@ -58,7 +66,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
   Future<void> _tryAutoLogin() async {
     final token = await _storage.getToken();
     if (token != null) {
-      final userData = _storage.getUser();
+      final userData = await _storage.getUser();
       if (userData != null) {
         final user = UserModel.fromJson(userData);
         if (user.isStudent) {

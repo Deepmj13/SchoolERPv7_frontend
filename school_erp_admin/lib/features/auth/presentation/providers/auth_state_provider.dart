@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_admin/core/api/api_client.dart';
+import 'package:school_erp_admin/core/api/security_client_default.dart'
+    if (dart.library.io) 'package:school_erp_admin/core/api/security_client_io.dart';
 import 'package:school_erp_admin/core/storage/storage_interface.dart';
 import 'package:school_erp_admin/core/storage/storage_service.dart';
 import 'package:school_erp_admin/features/auth/data/auth_repository.dart';
@@ -7,7 +9,10 @@ import 'package:school_erp_admin/features/auth/domain/user_model.dart';
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(storageServiceProvider);
-  final client = ApiClient(storage: storage);
+  final secureClient = createSecureClient();
+  final client = secureClient != null
+      ? ApiClient(storage: storage, client: secureClient)
+      : ApiClient(storage: storage);
   ref.onDispose(client.dispose);
   return client;
 });

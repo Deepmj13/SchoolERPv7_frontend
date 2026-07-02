@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:school_erp_teacher/core/storage/storage_service.dart';
+import 'package:school_erp_teacher/core/storage/storage_interface.dart';
 import 'package:school_erp_teacher/features/auth/presentation/login_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_announcements_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_attendance_screen.dart';
@@ -14,7 +14,7 @@ import 'package:school_erp_teacher/features/teacher/presentation/teacher_shell.d
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_timetable_screen.dart';
 import 'route_names.dart';
 
-GoRouter createRouter(StorageService storage) {
+GoRouter createRouter(StorageInterface storage) {
   return GoRouter(
     initialLocation: '/login',
     redirect: (BuildContext context, GoRouterState state) async {

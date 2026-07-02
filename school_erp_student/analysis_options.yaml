@@ -4,4 +4,9 @@ linter:
   rules:
     prefer_const_constructors: true
     prefer_const_declarations: true
-    avoid_print: true
+    prefer_final_locals: true
+    avoid_unnecessary_containers: true
+    avoid_redundant_argument_values: true
+    prefer_const_literals_to_create_immutables: true
+    sort_child_properties_last: true
+    avoid_print: false
