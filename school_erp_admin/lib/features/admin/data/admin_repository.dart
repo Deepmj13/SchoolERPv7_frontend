@@ -472,6 +472,18 @@ class AdminRepository {
     }
   }
 
+  Future<List<UnpaidFeeItem>> getUnpaidFees() async {
+    try {
+      final raw = await _api.get(Endpoints.feesUnpaid);
+      final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+      return list.map((e) => UnpaidFeeItem.fromJson(e as Map<String, dynamic>)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to parse unpaid fees: $e');
+    }
+  }
+
   Future<void> recordFeePayment(Map<String, dynamic> body) async {
     try {
       await _api.post(Endpoints.feesPayments, body: body);
@@ -479,6 +491,40 @@ class AdminRepository {
       rethrow;
     } catch (e) {
       throw ApiException(0, 'Failed to record payment: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> createFeePost(Map<String, dynamic> body) async {
+    try {
+      final data = await _api.post(Endpoints.feePosts, body: body);
+      return data as Map<String, dynamic>;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to create fee post: $e');
+    }
+  }
+
+  Future<List<FeePost>> getFeePosts() async {
+    try {
+      final raw = await _api.get(Endpoints.feePosts);
+      final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+      return list.map((e) => FeePost.fromJson(e as Map<String, dynamic>)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load fee posts: $e');
+    }
+  }
+
+  Future<FeePost> getFeePost(String id) async {
+    try {
+      final data = await _api.get(Endpoints.feePost(id));
+      return FeePost.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load fee post: $e');
     }
   }
 

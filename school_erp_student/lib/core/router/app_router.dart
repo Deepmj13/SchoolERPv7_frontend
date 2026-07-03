@@ -5,6 +5,7 @@ import 'package:school_erp_student/features/auth/presentation/login_screen.dart'
 import 'package:school_erp_student/features/student/presentation/student_attendance_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_dashboard_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_fees_screen.dart';
+import 'package:school_erp_student/features/student/presentation/student_fee_post_detail_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_assignment_detail_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_assignments_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_notices_screen.dart';
@@ -59,6 +60,13 @@ GoRouter createRouter(StorageInterface storage) {
             path: '/student/fees',
             name: RouteNames.studentFees,
             builder: (context, state) => const StudentFeesScreen(),
+          ),
+          GoRoute(
+            path: '/student/fees/:id',
+            name: RouteNames.studentFeePostDetail,
+            builder: (context, state) => StudentFeePostDetailScreen(
+              postId: state.pathParameters['id'] ?? '',
+            ),
           ),
           GoRoute(
             path: '/student/assignments',

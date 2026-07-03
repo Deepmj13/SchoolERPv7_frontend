@@ -7,6 +7,7 @@ class RouteNames {
   static const String studentResults = 'studentResults';
   static const String studentTimetable = 'studentTimetable';
   static const String studentFees = 'studentFees';
+  static const String studentFeePostDetail = 'studentFeePostDetail';
   static const String studentAssignments = 'studentAssignments';
   static const String studentAssignmentDetail = 'studentAssignmentDetail';
   static const String studentNotices = 'studentNotices';

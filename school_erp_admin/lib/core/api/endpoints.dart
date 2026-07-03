@@ -47,6 +47,9 @@ class Endpoints {
   static const String feesPending = '$apiPrefix/fees/pending';
   static const String feesPayments = '$apiPrefix/fees/payments';
   static String studentFees(String id) => '$apiPrefix/fees/student/$id';
+  static const String feePosts = '$apiPrefix/fees/posts';
+  static String feePost(String id) => '$apiPrefix/fees/posts/$id';
+  static const String feesUnpaid = '$apiPrefix/fees/unpaid';
 
   static const String announcements = '$apiPrefix/announcements';
   static String announcement(String id) => '$apiPrefix/announcements/$id';

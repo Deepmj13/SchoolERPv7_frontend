@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
+import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_fees_provider.dart';
 
 class StudentFeesScreen extends ConsumerWidget {
@@ -29,55 +31,13 @@ class StudentFeesScreen extends ConsumerWidget {
               children: [
                 _summaryCards(context, data),
                 const SizedBox(height: 24),
-                Text('Fee Structure',
+                Text('Fee Posts',
                     style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
-                ...data.structures.map(
-                  (s) => Padding(
+                ...data.posts.map(
+                  (p) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: GlassCard(
-                      child: Row(
-                        children: [
-                          Icon(
-                            s.paid
-                                ? Icons.check_circle
-                                : Icons.pending,
-                            color: s.paid
-                                ? AppColors.success
-                                : AppColors.warning,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Text(s.feeType,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium),
-                                if (s.dueDate != null)
-                                  Text('Due: ${s.dueDate}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            '₹${s.amount.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: s.paid
-                                  ? AppColors.success
-                                  : AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    child: _postCard(context, p),
                   ),
                 ),
                 if (data.payments.isNotEmpty) ...[
@@ -88,38 +48,7 @@ class StudentFeesScreen extends ConsumerWidget {
                   ...data.payments.map(
                     (p) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: GlassCard(
-                        child: Row(
-                          children: [
-                            const Icon(Icons.receipt_long,
-                                color: AppColors.info, size: 24),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '₹${p.amount.toStringAsFixed(2)}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
-                                  ),
-                                  Text(p.paymentDate,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium),
-                                ],
-                              ),
-                            ),
-                            if (p.paymentMethod != null)
-                              Text(p.paymentMethod!,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium),
-                          ],
-                        ),
-                      ),
+                      child: _paymentCard(context, p),
                     ),
                   ),
                 ],
@@ -127,6 +56,79 @@ class StudentFeesScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _postCard(BuildContext context, FeePost post) {
+    final allPaid = post.structures.every((s) => s.paid);
+    return GlassCard(
+      onTap: post.id != null
+          ? () => context.go('/student/fees/${post.id}')
+          : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(post.title,
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              if (post.id != null)
+                const Icon(Icons.chevron_right, size: 20,
+                    color: AppColors.textSecondary),
+            ],
+          ),
+          if (post.description != null && post.description!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(post.description!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                allPaid ? Icons.check_circle : Icons.pending,
+                size: 16,
+                color: allPaid ? AppColors.success : AppColors.warning,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                allPaid ? 'All Paid' : '${post.structures.length} item${post.structures.length == 1 ? '' : 's'}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: allPaid ? AppColors.success : AppColors.warning,
+                      fontSize: 12,
+                    ),
+              ),
+              const Spacer(),
+              Text(
+                '₹${post.totalAmount.toStringAsFixed(2)}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: allPaid ? AppColors.success : AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          if (post.dueDate != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today,
+                    size: 12, color: AppColors.textSecondary),
+                const SizedBox(width: 4),
+                Text('Due: ${post.dueDate}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontSize: 12,
+                        )),
+              ],
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -168,6 +170,32 @@ class StudentFeesScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _paymentCard(BuildContext context, FeePayment payment) {
+    return GlassCard(
+      child: Row(
+        children: [
+          const Icon(Icons.receipt_long,
+              color: AppColors.info, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('₹${payment.amount.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.titleMedium),
+                Text(payment.paymentDate,
+                    style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ),
+          if (payment.paymentMethod != null)
+            Text(payment.paymentMethod!,
+                style: Theme.of(context).textTheme.bodyMedium),
+        ],
+      ),
     );
   }
 }

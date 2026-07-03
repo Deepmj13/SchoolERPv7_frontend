@@ -9,7 +9,7 @@ class AppColors {
   static const Color primaryDark = Color(0xFF3A56D4);
 
   // Neutral palette
-  static const Color background = Color(0xFFFFFFFF);
+  static const Color background = Color(0xFFF5F6FA);
   static const Color surface = Color(0xFFF5F5F5);
   static const Color surfaceDark = Color(0xFF1A1A1A);
   static const Color backgroundDark = Color(0xFF000000);

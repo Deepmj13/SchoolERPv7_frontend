@@ -410,6 +410,7 @@ class FeeStructure {
   final double amount;
   final String? classId;
   final String? className;
+  final String? postTitle;
 
   FeeStructure({
     required this.id,
@@ -417,6 +418,7 @@ class FeeStructure {
     required this.amount,
     this.classId,
     this.className,
+    this.postTitle,
   });
 
   factory FeeStructure.fromJson(Map<String, dynamic> json) => FeeStructure(
@@ -425,6 +427,64 @@ class FeeStructure {
         amount: (json['amount'] as num).toDouble(),
         classId: json['class_id'] as String?,
         className: json['class_name'] as String?,
+        postTitle: json['post_title'] as String?,
+      );
+}
+
+class FeePost {
+  final String id;
+  final String title;
+  final String? description;
+  final String? dueDate;
+  final List<FeeStructure> structures;
+
+  FeePost({
+    required this.id,
+    required this.title,
+    this.description,
+    this.dueDate,
+    this.structures = const [],
+  });
+
+  factory FeePost.fromJson(Map<String, dynamic> json) => FeePost(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String?,
+        dueDate: json['due_date'] as String?,
+        structures: (json['structures'] as List?)
+                ?.map((e) => FeeStructure.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+      );
+}
+
+class UnpaidFeeItem {
+  final String studentId;
+  final String studentName;
+  final String className;
+  final String feeStructureId;
+  final String feeType;
+  final double amount;
+  final String? dueDate;
+
+  UnpaidFeeItem({
+    required this.studentId,
+    required this.studentName,
+    required this.className,
+    required this.feeStructureId,
+    required this.feeType,
+    required this.amount,
+    this.dueDate,
+  });
+
+  factory UnpaidFeeItem.fromJson(Map<String, dynamic> json) => UnpaidFeeItem(
+        studentId: json['student_id'] as String,
+        studentName: json['student_name'] as String,
+        className: json['class_name'] as String? ?? '',
+        feeStructureId: json['fee_structure_id'] as String,
+        feeType: json['fee_type'] as String,
+        amount: (json['amount'] as num).toDouble(),
+        dueDate: json['due_date'] as String?,
       );
 }
 

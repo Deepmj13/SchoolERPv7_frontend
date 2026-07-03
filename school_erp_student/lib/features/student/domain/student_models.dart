@@ -202,6 +202,39 @@ class FeePayment {
       );
 }
 
+class FeePost {
+  final String? id;
+  final String title;
+  final String? description;
+  final String? dueDate;
+  final List<FeeDetail> structures;
+
+  FeePost({
+    this.id,
+    required this.title,
+    this.description,
+    this.dueDate,
+    this.structures = const [],
+  });
+
+  factory FeePost.fromJson(Map<String, dynamic> json) => FeePost(
+        id: json['id'] as String?,
+        title: json['title'] as String? ?? 'Other Fees',
+        description: json['description'] as String?,
+        dueDate: json['due_date'] as String?,
+        structures: (json['structures'] as List?)
+                ?.map((e) => FeeDetail.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+      );
+
+  double get totalAmount => structures.fold(0.0, (sum, s) => sum + s.amount);
+  double get totalPaid =>
+      structures.where((s) => s.paid).fold(0.0, (sum, s) => sum + s.amount);
+  double get totalPending =>
+      structures.where((s) => !s.paid).fold(0.0, (sum, s) => sum + s.amount);
+}
+
 class Assignment {
   final String id;
   final String title;
