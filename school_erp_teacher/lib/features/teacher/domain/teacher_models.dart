@@ -362,6 +362,39 @@ class AssignmentSubmission {
       );
 }
 
+class StudentRemark {
+  final String id;
+  final String studentId;
+  final String? studentName;
+  final String type;
+  final String? category;
+  final String message;
+  final bool isRead;
+  final String createdAt;
+
+  StudentRemark({
+    required this.id,
+    required this.studentId,
+    this.studentName,
+    required this.type,
+    this.category,
+    required this.message,
+    required this.isRead,
+    required this.createdAt,
+  });
+
+  factory StudentRemark.fromJson(Map<String, dynamic> json) => StudentRemark(
+        id: json['id'] as String,
+        studentId: json['student_id'] as String,
+        studentName: json['student_name'] as String?,
+        type: json['type'] as String? ?? 'praise',
+        category: json['category'] as String?,
+        message: json['message'] as String? ?? '',
+        isRead: json['is_read'] as bool? ?? false,
+        createdAt: json['created_at'] as String? ?? '',
+      );
+}
+
 class MarkEntry {
   final String studentId;
   final String studentName;

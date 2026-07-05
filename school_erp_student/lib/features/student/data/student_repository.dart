@@ -62,4 +62,18 @@ class StudentRepository {
     }
     return [];
   }
+
+  Future<List<StudentRemark>> getRemarks(String studentId) async {
+    final data = await _api.get(Endpoints.studentRemarks(studentId));
+    if (data is List) {
+      return data
+          .map((e) => StudentRemark.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<void> markRemarkRead(String remarkId) async {
+    await _api.patch(Endpoints.markRemarkRead(remarkId));
+  }
 }

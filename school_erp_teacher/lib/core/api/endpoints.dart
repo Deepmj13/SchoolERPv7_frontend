@@ -47,4 +47,9 @@ class Endpoints {
 
   static const String timetable = '$apiPrefix/timetable';
   static String timetableEntry(String id) => '$apiPrefix/timetable/$id';
+
+  static const String remarks = '$apiPrefix/remarks';
+  static String teacherRemarks(String id) => '$apiPrefix/remarks/teacher/$id';
+  static String teacherRemarksForStudent(String teacherId, String studentId) =>
+      '$apiPrefix/remarks/teacher/$teacherId/student/$studentId';
 }

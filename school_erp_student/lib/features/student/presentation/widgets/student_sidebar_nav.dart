@@ -92,6 +92,12 @@ class StudentSidebarNav extends StatelessWidget {
               isActive: currentRoute == '/student/notices',
             ),
             _NavItem(
+              icon: Icons.rate_review_rounded,
+              label: 'Remarks',
+              route: '/student/remarks',
+              isActive: currentRoute == '/student/remarks',
+            ),
+            _NavItem(
               icon: Icons.person_rounded,
               label: 'Profile',
               route: '/student/profile',

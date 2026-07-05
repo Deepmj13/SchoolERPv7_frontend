@@ -15,59 +15,69 @@ void showMoreMenu(BuildContext context) {
     builder: (ctx) => SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
             ),
-            _MoreItem(
-              icon: Icons.assignment_rounded,
-              label: 'Results',
-              onTap: () {
-                Navigator.pop(ctx);
-                context.go('/student/results');
-              },
-            ),
-            _MoreItem(
-              icon: Icons.attach_money_rounded,
-              label: 'Fees',
-              onTap: () {
-                Navigator.pop(ctx);
-                context.go('/student/fees');
-              },
-            ),
-            _MoreItem(
-              icon: Icons.campaign_rounded,
-              label: 'Notices',
-              onTap: () {
-                Navigator.pop(ctx);
-                context.go('/student/notices');
-              },
-            ),
-            _MoreItem(
-              icon: Icons.book_rounded,
-              label: 'Assignments',
-              onTap: () {
-                Navigator.pop(ctx);
-                context.go('/student/assignments');
-              },
-            ),
-            _MoreItem(
-              icon: Icons.person_rounded,
-              label: 'Profile',
-              onTap: () {
-                Navigator.pop(ctx);
-                context.go('/student/profile');
-              },
-            ),
+          ),
+          _MoreItem(
+            icon: Icons.assignment_rounded,
+            label: 'Results',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/student/results');
+            },
+          ),
+          _MoreItem(
+            icon: Icons.attach_money_rounded,
+            label: 'Fees',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/student/fees');
+            },
+          ),
+          _MoreItem(
+            icon: Icons.campaign_rounded,
+            label: 'Notices',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/student/notices');
+            },
+          ),
+          _MoreItem(
+            icon: Icons.book_rounded,
+            label: 'Assignments',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/student/assignments');
+            },
+          ),
+          _MoreItem(
+            icon: Icons.rate_review_rounded,
+            label: 'Remarks',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/student/remarks');
+            },
+          ),
+          _MoreItem(
+            icon: Icons.person_rounded,
+            label: 'Profile',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/student/profile');
+            },
+          ),
           ],
+        ),
         ),
       ),
     ),

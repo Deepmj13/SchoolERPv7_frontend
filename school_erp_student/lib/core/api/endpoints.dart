@@ -28,4 +28,8 @@ class Endpoints {
   static const String classes = '$apiPrefix/classes';
   static String classById(String id) => '$apiPrefix/classes/$id';
   static String classTimetable(String id) => '$apiPrefix/classes/$id/timetable';
+
+  static const String remarks = '$apiPrefix/remarks';
+  static String studentRemarks(String id) => '$apiPrefix/remarks/student/$id';
+  static String markRemarkRead(String id) => '$apiPrefix/remarks/$id/read';
 }

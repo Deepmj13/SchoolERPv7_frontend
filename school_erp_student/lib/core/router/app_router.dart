@@ -10,6 +10,7 @@ import 'package:school_erp_student/features/student/presentation/student_assignm
 import 'package:school_erp_student/features/student/presentation/student_assignments_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_notices_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_profile_screen.dart';
+import 'package:school_erp_student/features/student/presentation/student_remarks_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_results_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_shell.dart';
 import 'package:school_erp_student/features/student/presentation/student_timetable_screen.dart';
@@ -84,6 +85,11 @@ GoRouter createRouter(StorageInterface storage) {
             path: '/student/notices',
             name: RouteNames.studentNotices,
             builder: (context, state) => const StudentNoticesScreen(),
+          ),
+          GoRoute(
+            path: '/student/remarks',
+            name: RouteNames.studentRemarks,
+            builder: (context, state) => const StudentRemarksScreen(),
           ),
           GoRoute(
             path: '/student/profile',

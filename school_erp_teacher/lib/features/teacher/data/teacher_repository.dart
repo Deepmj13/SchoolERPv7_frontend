@@ -162,4 +162,37 @@ class TeacherRepository {
     final data = await _api.get(Endpoints.teacherProfile(teacherId));
     return TeacherProfile.fromJson(data as Map<String, dynamic>);
   }
+
+  Future<StudentRemark> createRemark(
+      String studentId, String type, String? category, String message) async {
+    final data = await _api.post(Endpoints.remarks, body: {
+      'student_id': studentId,
+      'type': type,
+      if (category != null) 'category': category,
+      'message': message,
+    });
+    return StudentRemark.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<List<StudentRemark>> getTeacherRemarks(String teacherId) async {
+    final data = await _api.get(Endpoints.teacherRemarks(teacherId));
+    if (data is List) {
+      return data
+          .map((e) => StudentRemark.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<List<StudentRemark>> getRemarksForStudent(
+      String teacherId, String studentId) async {
+    final data = await _api
+        .get(Endpoints.teacherRemarksForStudent(teacherId, studentId));
+    if (data is List) {
+      return data
+          .map((e) => StudentRemark.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
 }

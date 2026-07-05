@@ -10,6 +10,7 @@ import 'package:school_erp_teacher/features/teacher/presentation/teacher_assignm
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_assignments_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_notices_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_profile_screen.dart';
+import 'package:school_erp_teacher/features/teacher/presentation/teacher_remarks_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_shell.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_timetable_screen.dart';
 import 'route_names.dart';
@@ -76,6 +77,11 @@ GoRouter createRouter(StorageInterface storage) {
             builder: (context, state) => TeacherAssignmentDetailScreen(
               assignmentId: state.pathParameters['id'] ?? '',
             ),
+          ),
+          GoRoute(
+            path: '/teacher/remarks',
+            name: RouteNames.teacherRemarks,
+            builder: (context, state) => const TeacherRemarksScreen(),
           ),
           GoRoute(
             path: '/teacher/profile',

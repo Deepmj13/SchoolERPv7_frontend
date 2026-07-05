@@ -301,6 +301,36 @@ class Notice {
       );
 }
 
+class StudentRemark {
+  final String id;
+  final String? teacherName;
+  final String type;
+  final String? category;
+  final String message;
+  final bool isRead;
+  final String createdAt;
+
+  StudentRemark({
+    required this.id,
+    this.teacherName,
+    required this.type,
+    this.category,
+    required this.message,
+    required this.isRead,
+    required this.createdAt,
+  });
+
+  factory StudentRemark.fromJson(Map<String, dynamic> json) => StudentRemark(
+        id: json['id'] as String,
+        teacherName: json['teacher_name'] as String?,
+        type: json['type'] as String? ?? 'praise',
+        category: json['category'] as String?,
+        message: json['message'] as String? ?? '',
+        isRead: json['is_read'] as bool? ?? false,
+        createdAt: json['created_at'] as String? ?? '',
+      );
+}
+
 class DashboardData {
   final String studentName;
   final AttendanceSummary? attendanceSummary;
