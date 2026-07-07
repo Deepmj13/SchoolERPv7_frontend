@@ -472,9 +472,15 @@ class AdminRepository {
     }
   }
 
-  Future<List<UnpaidFeeItem>> getUnpaidFees() async {
+  Future<List<UnpaidFeeItem>> getUnpaidFees({String? classId, String? paymentFilter}) async {
     try {
-      final raw = await _api.get(Endpoints.feesUnpaid);
+      final params = <String, String>{};
+      if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
+      if (paymentFilter != null && paymentFilter.isNotEmpty) params['payment_filter'] = paymentFilter;
+      final raw = await _api.get(
+        Endpoints.feesUnpaid,
+        queryParams: params.isNotEmpty ? params : null,
+      );
       final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
       return list.map((e) => UnpaidFeeItem.fromJson(e as Map<String, dynamic>)).toList();
     } on ApiException {

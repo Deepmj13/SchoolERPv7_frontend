@@ -1,5 +1,9 @@
+import 'dart:io';
+import 'package:excel/excel.dart' hide Border;
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/custom_button.dart';
@@ -9,16 +13,33 @@ import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/widgets/data_table_widget.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
-final feePostsProvider = FutureProvider<List<FeePost>>((ref) {
+class UnpaidFilterState {
+  final String? classId;
+  final String paymentFilter;
+
+  const UnpaidFilterState({this.classId, this.paymentFilter = 'all'});
+}
+
+final unpaidFilterProvider = StateProvider.autoDispose<UnpaidFilterState>((ref) => const UnpaidFilterState());
+
+final feePostsProvider = FutureProvider.autoDispose<List<FeePost>>((ref) {
   return ref.watch(adminRepositoryProvider).getFeePosts().timeout(const Duration(seconds: 15));
 });
 
-final pendingFeesProvider = FutureProvider<List<FeePayment>>((ref) {
+final pendingFeesProvider = FutureProvider.autoDispose<List<FeePayment>>((ref) {
   return ref.watch(adminRepositoryProvider).getPendingFees().timeout(const Duration(seconds: 15));
 });
 
-final unpaidFeesProvider = FutureProvider<List<UnpaidFeeItem>>((ref) {
-  return ref.watch(adminRepositoryProvider).getUnpaidFees().timeout(const Duration(seconds: 15));
+final _classesProvider = FutureProvider.autoDispose<List<ClassModel>>((ref) {
+  return ref.watch(adminRepositoryProvider).getClasses();
+});
+
+final unpaidFeesProvider = FutureProvider.autoDispose<List<UnpaidFeeItem>>((ref) {
+  final filter = ref.watch(unpaidFilterProvider);
+  return ref.watch(adminRepositoryProvider).getUnpaidFees(
+    classId: filter.classId,
+    paymentFilter: filter.paymentFilter,
+  ).timeout(const Duration(seconds: 15));
 });
 
 class AdminFeesScreen extends ConsumerStatefulWidget {
@@ -66,12 +87,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
           _pendingTab(isMobile),
         ],
       ),
-      floatingActionButton: isMobile
-          ? FloatingActionButton(
-              onPressed: () => _showCreatePostSheet(),
-              child: const Icon(Icons.add),
-            )
-          : null,
+
     );
   }
 
@@ -88,6 +104,12 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
         data: (posts) =>
             isMobile ? _mobilePosts(posts) : _desktopPosts(posts),
       ),
+      floatingActionButton: isMobile
+          ? FloatingActionButton(
+              onPressed: () => _showCreatePostSheet(),
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 
@@ -336,18 +358,105 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
   }
 
   Widget _pendingTab(bool isMobile) {
-    final async = ref.watch(unpaidFeesProvider);
+    final feesAsync = ref.watch(unpaidFeesProvider);
+    final filter = ref.watch(unpaidFilterProvider);
+    final classesAsync = ref.watch(_classesProvider);
 
     return Scaffold(
-      body: async.when(
-        loading: () => const ListSkeletonLoader(),
-        error: (e, _) => ErrorRetryWidget(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(unpaidFeesProvider),
-        ),
-        data: (items) =>
-            isMobile ? _mobileUnpaid(items) : _desktopUnpaid(items),
+      body: Column(
+        children: [
+          _unpaidFilterBar(isMobile, feesAsync, classesAsync, filter),
+          Expanded(
+            child: feesAsync.when(
+              loading: () => const ListSkeletonLoader(),
+              error: (e, _) => ErrorRetryWidget(
+                message: e.toString(),
+                onRetry: () => ref.invalidate(unpaidFeesProvider),
+              ),
+              data: (items) =>
+                  isMobile ? _mobileUnpaid(items) : _desktopUnpaid(items),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _unpaidFilterBar(bool isMobile, AsyncValue<List<UnpaidFeeItem>> feesAsync, AsyncValue<List<ClassModel>> classesAsync, UnpaidFilterState filter) {
+    final filterWidgets = <Widget>[
+      SizedBox(
+        width: isMobile ? 150 : 200,
+        child: classesAsync.when(
+          loading: () => const SizedBox(height: 40),
+          error: (_, _) => const SizedBox(height: 40),
+            data: (classes) => DropdownButtonFormField<String?>(
+                key: ValueKey('class_${filter.classId}'),
+                initialValue: filter.classId,
+            decoration: const InputDecoration(
+              labelText: 'Class',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            ),
+            items: [
+              const DropdownMenuItem(child: Text('All Classes')),
+              ...classes.map((c) => DropdownMenuItem(
+                value: c.id,
+                child: Text(c.display, overflow: TextOverflow.ellipsis),
+              )),
+            ],
+            onChanged: (v) => ref.read(unpaidFilterProvider.notifier).state = UnpaidFilterState(
+              classId: v,
+              paymentFilter: filter.paymentFilter,
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(width: 12),
+      SizedBox(
+        width: isMobile ? 150 : 200,
+        child: DropdownButtonFormField<String>(
+          key: ValueKey('status_${filter.paymentFilter}'),
+          initialValue: filter.paymentFilter,
+          decoration: const InputDecoration(
+            labelText: 'Status',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          ),
+          items: const [
+            DropdownMenuItem(value: 'all', child: Text('All Unpaid')),
+            DropdownMenuItem(value: 'none', child: Text('Fully Unpaid')),
+            DropdownMenuItem(value: 'partial', child: Text('Partially Paid')),
+          ],
+          onChanged: (v) {
+            if (v != null) {
+              ref.read(unpaidFilterProvider.notifier).state = UnpaidFilterState(
+                classId: filter.classId,
+                paymentFilter: v,
+              );
+            }
+          },
+        ),
+      ),
+      const SizedBox(width: 12),
+      CustomButton(
+        label: 'Export Excel',
+        icon: Icons.file_download_outlined,
+        onPressed: feesAsync.when(
+          data: (items) => items.isNotEmpty ? () => _exportExcel(items) : null,
+          loading: () => null,
+          error: (_, _) => null,
+        ),
+      ),
+    ];
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(isMobile ? 16 : 24, 12, isMobile ? 16 : 24, 0),
+      child: isMobile
+          ? SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: filterWidgets),
+            )
+          : Row(children: filterWidgets),
     );
   }
 
@@ -389,12 +498,37 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                 ColumnDefinition<UnpaidFeeItem>(
                   header: 'Amount',
                   sortable: true,
-                  displayValue: (i) => '₹${i.amount.toStringAsFixed(2)}',
+                  displayValue: (i) => '₹${i.amount.toStringAsFixed(2)} / ₹${i.totalAmount.toStringAsFixed(2)}',
+                ),
+                ColumnDefinition<UnpaidFeeItem>(
+                  header: 'Status',
+                  displayValue: (i) => i.paymentStatus,
+                  width: 100,
+                  displayWidget: (i) => _buildStatusChip(i.paymentStatus),
                 ),
                 ColumnDefinition<UnpaidFeeItem>(
                   header: 'Due Date',
                   displayValue: (i) => i.dueDate ?? '-',
                   width: 120,
+                  displayWidget: (i) {
+                    final isOverdue = i.dueDate != null && _isOverdue(i.dueDate!);
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          i.dueDate ?? '-',
+                          style: TextStyle(
+                            color: isOverdue ? AppColors.error : null,
+                            fontWeight: isOverdue ? FontWeight.w600 : null,
+                          ),
+                        ),
+                        if (isOverdue) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
+                        ],
+                      ],
+                    );
+                  },
                 ),
               ],
               actionsBuilder: (item) => FilledButton.tonalIcon(
@@ -467,13 +601,33 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                                       fontSize: 15,
                                       fontWeight: FontWeight.w600)),
                               const SizedBox(height: 2),
-                              Text(
-                                '${item.feeType}  •  ${item.className}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(fontSize: 13),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  '${item.feeType}  •  ${item.className}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(fontSize: 13),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
+                              if (item.dueDate != null && _isOverdue(item.dueDate!))
+                                Container(
+                                  margin: const EdgeInsets.only(left: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.error.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Text('Overdue',
+                                      style: TextStyle(fontSize: 10, color: AppColors.error, fontWeight: FontWeight.w600)),
+                                ),
+                            ],
+                          ),
+                              const SizedBox(height: 6),
+                              _buildStatusChip(item.paymentStatus),
                             ],
                           ),
                         ),
@@ -482,12 +636,22 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                           children: [
                             Text(
                               '₹${item.amount.toStringAsFixed(2)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.warning,
+                                color: item.amount < item.totalAmount
+                                    ? AppColors.warning
+                                    : AppColors.success,
                               ),
                             ),
+                            if (item.amount < item.totalAmount)
+                              Text(
+                                '/ ₹${item.totalAmount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.withValues(alpha: 0.7),
+                                ),
+                              ),
                             const SizedBox(height: 4),
                             IconButton(
                               icon: const Icon(Icons.check_circle_outline,
@@ -509,63 +673,114 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
   Future<void> _recordPaymentDialog(UnpaidFeeItem item) async {
     DateTime paymentDate = DateTime.now();
     String paymentMode = 'cash';
+    String paymentStatus = 'paid';
     bool saving = false;
+    final amountCtrl = TextEditingController(text: item.amount.toStringAsFixed(2));
 
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Record Payment'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+          title: Row(
             children: [
-              _detailRow('Student', item.studentName),
-              _detailRow('Class', item.className),
-              _detailRow('Fee Type', item.feeType),
-              _detailRow('Amount', '₹${item.amount.toStringAsFixed(2)}'),
-              if (item.dueDate != null) _detailRow('Due Date', item.dueDate!),
-              const SizedBox(height: 16),
-              InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: ctx,
-                    initialDate: paymentDate,
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (picked != null) {
-                    setDialogState(() => paymentDate = picked);
-                  }
-                },
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Payment Date *',
-                    prefixIcon: Icon(Icons.calendar_today),
-                  ),
-                  child: Text(
-                    '${paymentDate.day}/${paymentDate.month}/${paymentDate.year}',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: paymentMode,
-                decoration: const InputDecoration(
-                  labelText: 'Payment Mode',
-                  prefixIcon: Icon(Icons.payment),
-                ),
-                items: const [
-                  DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                  DropdownMenuItem(value: 'card', child: Text('Card')),
-                  DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
-                  DropdownMenuItem(value: 'online', child: Text('Online')),
-                ],
-                onChanged: (v) {
-                  if (v != null) setDialogState(() => paymentMode = v);
-                },
-              ),
+              const Text('Record Payment'),
+              const Spacer(),
+              if (item.dueDate != null) ...[
+                _buildOverdueChip(item.dueDate!),
+              ],
             ],
+          ),
+          content: SizedBox(
+            width: 400,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _detailRow('Student', item.studentName),
+                _detailRow('Class', item.className),
+                _detailRow('Fee Type', item.feeType),
+                _detailRow('Total Fee', '₹${item.totalAmount.toStringAsFixed(2)}'),
+                if (item.dueDate != null) _detailRow('Due Date', item.dueDate!),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: amountCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Amount Paid *',
+                    prefixText: '₹ ',
+                    prefixIcon: const Icon(Icons.currency_rupee),
+                    helperText: item.amount < item.totalAmount
+                        ? 'Remaining: ₹${item.amount.toStringAsFixed(2)}'
+                        : null,
+                    helperStyle: TextStyle(
+                      color: item.amount < item.totalAmount
+                          ? AppColors.warning
+                          : AppColors.success,
+                      fontSize: 12,
+                    ),
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: paymentStatus,
+                  decoration: const InputDecoration(
+                    labelText: 'Status',
+                    prefixIcon: Icon(Icons.flag_outlined),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'paid', child: Text('Paid (Done)')),
+                    DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setDialogState(() => paymentStatus = v);
+                  },
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: ctx,
+                      initialDate: paymentDate,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      setDialogState(() => paymentDate = picked);
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Payment Date *',
+                      prefixIcon: Icon(Icons.calendar_today),
+                    ),
+                    child: Text(
+                      '${paymentDate.day}/${paymentDate.month}/${paymentDate.year}',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: paymentMode,
+                  decoration: const InputDecoration(
+                    labelText: 'Payment Mode',
+                    prefixIcon: Icon(Icons.payment),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'cash', child: Text('Cash')),
+                    DropdownMenuItem(value: 'card', child: Text('Card')),
+                    DropdownMenuItem(value: 'cheque', child: Text('Cheque')),
+                    DropdownMenuItem(value: 'upi', child: Text('UPI')),
+                    DropdownMenuItem(value: 'bank_transfer', child: Text('Bank Transfer')),
+                    DropdownMenuItem(value: 'online', child: Text('Online')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setDialogState(() => paymentMode = v);
+                  },
+                ),
+              ],
+            ),
+          ),
           ),
           actions: [
             TextButton(
@@ -576,6 +791,16 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
               onPressed: saving
                   ? null
                   : () async {
+                      final amt = double.tryParse(amountCtrl.text.trim());
+                      if (amt == null || amt <= 0) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          const SnackBar(
+                            content: Text('Enter a valid amount'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
                       setDialogState(() => saving = true);
                       final dateStr =
                           '${paymentDate.year}-${paymentDate.month.toString().padLeft(2, '0')}-${paymentDate.day.toString().padLeft(2, '0')}';
@@ -583,11 +808,12 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
                         await ref.read(adminRepositoryProvider).recordFeePayment({
                           'student_id': item.studentId,
                           'fee_structure_id': item.feeStructureId,
-                          'amount_paid': item.amount,
+                          'amount_paid': amt,
                           'payment_date': dateStr,
                           'payment_mode': paymentMode,
+                          'status': paymentStatus,
                         });
-                          ref.invalidate(unpaidFeesProvider);
+                        ref.invalidate(unpaidFeesProvider);
                         if (ctx.mounted) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(ctx).showSnackBar(
@@ -624,6 +850,168 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
         ),
       ),
     );
+  }
+
+  bool _isOverdue(String dueDateStr) {
+    try {
+      final parts = dueDateStr.split('-');
+      if (parts.length != 3) return false;
+      final due = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      return due.isBefore(DateTime.now());
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Widget _buildOverdueChip(String dueDateStr) {
+    if (_isOverdue(dueDateStr)) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.error.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.error),
+            SizedBox(width: 4),
+            Text('Overdue', style: TextStyle(fontSize: 12, color: AppColors.error, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildStatusChip(String status) {
+    if (status == 'partial') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.warning.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.pie_chart_outline, size: 12, color: AppColors.warning),
+            SizedBox(width: 4),
+            Text('Partial', style: TextStyle(fontSize: 11, color: AppColors.warning, fontWeight: FontWeight.w600)),
+          ],
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.cancel_outlined, size: 12, color: AppColors.error),
+          SizedBox(width: 4),
+          Text('Unpaid', style: TextStyle(fontSize: 11, color: AppColors.error, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _exportExcel(List<UnpaidFeeItem> items) async {
+    try {
+      final excel = Excel.createExcel();
+      final sheet = excel['Unpaid Fees'];
+
+      sheet.appendRow([
+        TextCellValue('Student Name'),
+        TextCellValue('Class'),
+        TextCellValue('Fee Type'),
+        TextCellValue('Total Amount'),
+        TextCellValue('Paid Amount'),
+        TextCellValue('Remaining'),
+        TextCellValue('Status'),
+        TextCellValue('Due Date'),
+      ]);
+
+      for (final item in items) {
+        final paid = item.totalAmount - item.amount;
+        sheet.appendRow([
+          TextCellValue(item.studentName),
+          TextCellValue(item.className),
+          TextCellValue(item.feeType),
+          DoubleCellValue(item.totalAmount),
+          DoubleCellValue(paid),
+          DoubleCellValue(item.amount),
+          TextCellValue(item.isPartial ? 'Partially Paid' : 'Unpaid'),
+          TextCellValue(item.dueDate ?? ''),
+        ]);
+      }
+
+      final fileBytes = excel.save();
+      if (fileBytes == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to generate file'), behavior: SnackBarBehavior.floating),
+          );
+        }
+        return;
+      }
+
+      final fileNameCtrl = TextEditingController(text: 'unpaid_fees.xlsx');
+      if (!mounted) return;
+      final fileName = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Save Excel Report'),
+          content: TextField(
+            controller: fileNameCtrl,
+            decoration: const InputDecoration(
+              labelText: 'File name',
+              suffixText: '.xlsx',
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, fileNameCtrl.text),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      );
+
+      String? result;
+      if (fileName != null) {
+        final name = fileName.endsWith('.xlsx') ? fileName : '$fileName.xlsx';
+        final dir = await getExternalStorageDirectory();
+        if (dir != null) {
+          final file = File('${dir.path}/$name');
+          await file.writeAsBytes(fileBytes);
+          result = file.path;
+        }
+      }
+
+      if (result != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Saved: $result'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Export failed: $e'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating),
+        );
+      }
+    }
   }
 
   Widget _detailRow(String label, String value) {

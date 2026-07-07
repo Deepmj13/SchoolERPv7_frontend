@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.schoolerp.school_erp_teacher"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

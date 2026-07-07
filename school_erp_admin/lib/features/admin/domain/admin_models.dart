@@ -465,7 +465,9 @@ class UnpaidFeeItem {
   final String feeStructureId;
   final String feeType;
   final double amount;
+  final double totalAmount;
   final String? dueDate;
+  final String paymentStatus;
 
   UnpaidFeeItem({
     required this.studentId,
@@ -474,8 +476,13 @@ class UnpaidFeeItem {
     required this.feeStructureId,
     required this.feeType,
     required this.amount,
+    this.totalAmount = 0,
     this.dueDate,
+    this.paymentStatus = 'none',
   });
+
+  bool get isPartial => paymentStatus == 'partial';
+  bool get isNone => paymentStatus == 'none';
 
   factory UnpaidFeeItem.fromJson(Map<String, dynamic> json) => UnpaidFeeItem(
         studentId: json['student_id'] as String,
@@ -484,7 +491,9 @@ class UnpaidFeeItem {
         feeStructureId: json['fee_structure_id'] as String,
         feeType: json['fee_type'] as String,
         amount: (json['amount'] as num).toDouble(),
+        totalAmount: (json['total_amount'] as num?)?.toDouble() ?? (json['amount'] as num).toDouble(),
         dueDate: json['due_date'] as String?,
+        paymentStatus: json['payment_status'] as String? ?? 'none',
       );
 }
 
