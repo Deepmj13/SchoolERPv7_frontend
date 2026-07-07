@@ -23,8 +23,8 @@ class ApiClient {
   final StorageInterface _storage;
   VoidCallback? onUnauthorized;
 
-  static const Duration _defaultTimeout = Duration(seconds: 15);
-  static const Duration _refreshTimeout = Duration(seconds: 10);
+  static const Duration _defaultTimeout = Duration(seconds: 30);
+  static const Duration _refreshTimeout = Duration(seconds: 15);
   static const int _maxRetries = 3;
 
   ApiClient({required this._storage, http.Client? client})

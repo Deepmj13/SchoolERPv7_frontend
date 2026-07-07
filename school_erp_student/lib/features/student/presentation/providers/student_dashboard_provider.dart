@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:school_erp_student/core/logging/app_logger.dart';
 import 'package:school_erp_student/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_repository_provider.dart';
@@ -9,13 +10,19 @@ final studentDashboardProvider =
   final authState = ref.watch(authStateProvider);
   final studentId = authState.user?.studentId ?? '';
 
+  if (studentId.isEmpty) {
+    AppLogger.api.warning('studentDashboardProvider: studentId is empty');
+  }
+
   String studentName = '';
   AttendanceSummary? attendanceSummary;
 
   try {
     final profile = await repo.getProfile(studentId);
     studentName = profile.fullName;
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.api.warning('studentDashboardProvider: profile fetch failed: $e');
+  }
 
   try {
     final records = await repo.getAttendance(studentId);
@@ -32,13 +39,17 @@ final studentDashboardProvider =
         percentage: total > 0 ? (present / total) * 100 : 0,
       );
     }
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.api.warning('studentDashboardProvider: attendance fetch failed: $e');
+  }
 
   List<Notice> recentNotices = [];
   try {
     final notices = await repo.getNotices();
     recentNotices = notices.take(3).toList();
-  } catch (_) {}
+  } catch (e) {
+    AppLogger.api.warning('studentDashboardProvider: notices fetch failed: $e');
+  }
 
   return DashboardData(
     studentName: studentName,

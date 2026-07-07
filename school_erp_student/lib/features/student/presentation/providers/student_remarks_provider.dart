@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:school_erp_student/core/logging/app_logger.dart';
 import 'package:school_erp_student/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_student/features/student/data/student_repository.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
@@ -56,7 +57,9 @@ class RemarksStateNotifier extends StateNotifier<RemarksState> {
           return r;
         }).toList(),
       );
-    } catch (_) {}
+    } catch (e) {
+      AppLogger.api.warning('markAsRead failed for $remarkId: $e');
+    }
   }
 
   Future<void> refresh() => _loadRemarks();
