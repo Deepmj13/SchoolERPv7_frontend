@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/custom_button.dart';
@@ -8,6 +9,10 @@ import 'package:school_erp_admin/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/widgets/data_table_widget.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
+
+final _allSubjectsProvider = FutureProvider<List<Subject>>((ref) {
+  return ref.watch(adminRepositoryProvider).getSubjects().timeout(const Duration(seconds: 15));
+});
 
 final examsProvider = FutureProvider<List<Exam>>((ref) {
   return ref.watch(adminRepositoryProvider).getExams().timeout(const Duration(seconds: 15));
@@ -95,13 +100,19 @@ class AdminExamsScreen extends ConsumerWidget {
         ],
         actionsBuilder: (exam) => PopupMenuButton<String>(
           onSelected: (action) {
-            if (action == 'publish') {
+            if (action == 'subjects') {
+              _showSubjectsDialog(context, ref, exam);
+            } else if (action == 'marks') {
+              context.push('/admin/mark-entry/${exam.id}');
+            } else if (action == 'publish') {
               _togglePublish(context, ref, exam);
             } else if (action == 'delete') {
               _confirmDeleteDesktop(context, ref, exam);
             }
           },
           itemBuilder: (_) => [
+            const PopupMenuItem(value: 'subjects', child: Text('Subjects')),
+            const PopupMenuItem(value: 'marks', child: Text('Enter Marks')),
             PopupMenuItem(
               value: 'publish',
               child: Text(exam.isPublished ? 'Unpublish' : 'Publish'),
@@ -637,4 +648,98 @@ class AdminExamsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  void _showSubjectsDialog(BuildContext context, WidgetRef ref, Exam exam) {
+    final subjectsAsync = ref.watch(examSubjectsProvider(exam.id));
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Subjects — ${exam.name}'),
+        content: SizedBox(
+          width: 400,
+          child: subjectsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Text('$e'),
+            data: (subjects) {
+              if (subjects.isEmpty) {
+                return const Text('No subjects added yet');
+              }
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: subjects
+                    .map((s) => ListTile(
+                          dense: true,
+                          title: Text(s.subjectName),
+                          subtitle: Text('Max: ${s.maxMarks.toInt()}${s.passingMarks != null ? ', Pass: ${s.passingMarks!.toInt()}' : ''}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                            onPressed: () async {
+                              await ref.read(adminRepositoryProvider).removeExamSubject(exam.id, s.subjectId);
+                              ref.invalidate(examSubjectsProvider(exam.id));
+                            },
+                          ),
+                        ))
+                    .toList(),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => _showAddSubjectDialog(context, ref, exam),
+            child: const Text('Add Subject'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddSubjectDialog(BuildContext context, WidgetRef ref, Exam exam) {
+    final subjectsAsync = ref.watch(_allSubjectsProvider);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Subject to Exam'),
+        content: subjectsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Text('$e'),
+          data: (allSubjects) {
+            return SizedBox(
+              width: 300,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: allSubjects.length,
+                itemBuilder: (_, i) {
+                  final s = allSubjects[i];
+                  return ListTile(
+                    dense: true,
+                    title: Text(s.name),
+                    onTap: () async {
+                      await ref.read(adminRepositoryProvider).addExamSubject(exam.id, {
+                        'subject_id': s.id,
+                        'max_marks': 100,
+                        'passing_marks': 40,
+                      });
+                      ref.invalidate(examSubjectsProvider(exam.id));
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 }
+
+final examSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
+  return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 15));
+});

@@ -20,6 +20,8 @@ class Endpoints {
   static const String assignments = '$apiPrefix/assignments';
   static String assignment(String id) => '$apiPrefix/assignments/$id';
 
+  static const String holidays = '$apiPrefix/holidays';
+
   static const String timetable = '$apiPrefix/timetable';
 
   static const String notices = '$apiPrefix/announcements';

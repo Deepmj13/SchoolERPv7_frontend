@@ -14,4 +14,10 @@ class RouteNames {
   static const String adminAnnouncements = 'adminAnnouncements';
   static const String adminSettings = 'adminSettings';
   static const String adminMore = 'adminMore';
+  static const String adminReports = 'adminReports';
+  static const String adminGrading = 'adminGrading';
+  static const String adminMarkEntry = 'adminMarkEntry';
+  static const String adminPromotion = 'adminPromotion';
+  static const String adminHolidays = 'adminHolidays';
+  static const String adminStaff = 'adminStaff';
 }

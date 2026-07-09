@@ -200,6 +200,9 @@ class TimetableEntry {
   final String day;
   final String startTime;
   final String endTime;
+  final String? room;
+  final String? className;
+  final String? classSection;
 
   TimetableEntry({
     required this.id,
@@ -210,6 +213,9 @@ class TimetableEntry {
     required this.day,
     required this.startTime,
     required this.endTime,
+    this.room,
+    this.className,
+    this.classSection,
   });
 
   factory TimetableEntry.fromJson(Map<String, dynamic> json) =>
@@ -222,7 +228,12 @@ class TimetableEntry {
         day: json['day'] as String,
         startTime: json['start_time'] as String,
         endTime: json['end_time'] as String,
+        room: json['room'] as String?,
+        className: json['class_name'] as String?,
+        classSection: json['class_section'] as String?,
       );
+
+  String get classDisplay => className != null ? '$className${classSection != null && classSection!.isNotEmpty ? ' - $classSection' : ''}' : '';
 }
 
 class Announcement {
@@ -366,6 +377,7 @@ class StudentRemark {
   final String id;
   final String studentId;
   final String? studentName;
+  final String? teacherId;
   final String type;
   final String? category;
   final String message;
@@ -376,6 +388,7 @@ class StudentRemark {
     required this.id,
     required this.studentId,
     this.studentName,
+    this.teacherId,
     required this.type,
     this.category,
     required this.message,
@@ -387,6 +400,7 @@ class StudentRemark {
         id: json['id'] as String,
         studentId: json['student_id'] as String,
         studentName: json['student_name'] as String?,
+        teacherId: json['teacher_id'] as String?,
         type: json['type'] as String? ?? 'praise',
         category: json['category'] as String?,
         message: json['message'] as String? ?? '',
@@ -409,4 +423,34 @@ class MarkEntry {
     this.marksObtained = 0,
     this.totalMarks = 100,
   });
+}
+
+class Holiday {
+  final String id;
+  final String title;
+  final String? description;
+  final String date;
+  final String type;
+  final bool isRecurring;
+
+  Holiday({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.date,
+    this.type = 'holiday',
+    this.isRecurring = false,
+  });
+
+  factory Holiday.fromJson(Map<String, dynamic> json) => Holiday(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String?,
+        date: json['date'] as String,
+        type: json['type'] as String? ?? 'holiday',
+        isRecurring: json['is_recurring'] as bool? ?? false,
+      );
+
+  bool get isHoliday => type == 'holiday';
+  String get displayType => isHoliday ? 'Holiday' : 'Event';
 }

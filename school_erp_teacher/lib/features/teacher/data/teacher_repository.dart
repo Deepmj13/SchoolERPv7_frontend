@@ -23,8 +23,9 @@ class TeacherRepository {
   }
 
   Future<List<Student>> getClassStudents(String classId) async {
-    final data = await _api.get(Endpoints.classStudents(classId));
-    return (data as List)
+    final raw = await _api.get(Endpoints.classStudents(classId));
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list
         .map((e) => Student.fromJson(e as Map<String, dynamic>))
         .toList();
   }
@@ -70,6 +71,13 @@ class TeacherRepository {
       'subjectId': subjectId,
       'marks': marks,
     });
+  }
+
+  Future<List<TimetableEntry>> getTeacherTimetable(String teacherId) async {
+    final data = await _api.get(Endpoints.teacherTimetable(teacherId));
+    return (data as List)
+        .map((e) => TimetableEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<TimetableEntry>> getClassTimetable(String classId) async {
@@ -191,6 +199,30 @@ class TeacherRepository {
     if (data is List) {
       return data
           .map((e) => StudentRemark.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
+
+  Future<StudentRemark> updateRemark(
+      String id, {String? type, String? category, String? message}) async {
+    final body = <String, dynamic>{};
+    if (type != null) body['type'] = type;
+    if (category != null) body['category'] = category;
+    if (message != null) body['message'] = message;
+    final data = await _api.patch(Endpoints.remark(id), body: body);
+    return StudentRemark.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteRemark(String id) async {
+    await _api.delete(Endpoints.remark(id));
+  }
+
+  Future<List<Holiday>> getHolidays() async {
+    final data = await _api.get(Endpoints.holidays);
+    if (data is List) {
+      return data
+          .map((e) => Holiday.fromJson(e as Map<String, dynamic>))
           .toList();
     }
     return [];

@@ -31,7 +31,10 @@ class GlassCard extends StatelessWidget {
             color:
                 isDark ? AppColors.glassBorderDark : AppColors.glassBorderLight),
       ),
-      child: child,
+      child: Material(
+        type: MaterialType.transparency,
+        child: child,
+      ),
     );
     return Material(
       type: MaterialType.transparency,

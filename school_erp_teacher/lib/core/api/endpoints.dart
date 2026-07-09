@@ -21,6 +21,7 @@ class Endpoints {
   static String teacherClassTeacherClass(String id) =>
       '$apiPrefix/teachers/$id/class-teacher-class';
   static String teacherProfile(String id) => '$apiPrefix/teachers/$id';
+  static String teacherTimetable(String id) => '$apiPrefix/teachers/$id/timetable';
 
   static const String attendanceMark = '$apiPrefix/attendance/mark';
   static const String attendance = '$apiPrefix/attendance';
@@ -45,6 +46,8 @@ class Endpoints {
   static String assignmentSubmissions(String id) =>
       '$apiPrefix/assignments/$id/submissions';
 
+  static const String holidays = '$apiPrefix/holidays';
+
   static const String timetable = '$apiPrefix/timetable';
   static String timetableEntry(String id) => '$apiPrefix/timetable/$id';
 
@@ -52,4 +55,5 @@ class Endpoints {
   static String teacherRemarks(String id) => '$apiPrefix/remarks/teacher/$id';
   static String teacherRemarksForStudent(String teacherId, String studentId) =>
       '$apiPrefix/remarks/teacher/$teacherId/student/$studentId';
+  static String remark(String id) => '$apiPrefix/remarks/$id';
 }

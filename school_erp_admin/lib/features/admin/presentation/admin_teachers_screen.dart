@@ -46,7 +46,7 @@ class AdminTeachersScreen extends ConsumerWidget {
           CustomButton(
             label: 'Add Teacher',
             icon: Icons.add,
-            onPressed: () => _showTeacherDialog(context, ref, null),
+            onPressed: () { _showTeacherDialog(context, ref, null); },
           ),
           const SizedBox(width: 16),
         ],
@@ -303,6 +303,9 @@ class AdminTeachersScreen extends ConsumerWidget {
   Future<void> _showTeacherSheet(
       BuildContext context, WidgetRef ref, Teacher? existing) async {
     final isEdit = existing != null;
+    final repo = ref.read(adminRepositoryProvider);
+    final subjects = isEdit ? <Subject>[] : await repo.getSubjects();
+    if (!context.mounted) return;
 
     final nameCtrl = TextEditingController(text: existing?.fullName ?? '');
     final emailCtrl = TextEditingController(text: existing?.email ?? '');
@@ -310,6 +313,7 @@ class AdminTeachersScreen extends ConsumerWidget {
       text: isEdit ? '' : defaultUserPassword,
     );
     final phoneCtrl = TextEditingController(text: existing?.phone ?? '');
+    final selectedSubjectIds = <String>{};
     bool saving = false;
 
     final result = await showModalBottomSheet<bool>(
@@ -388,6 +392,38 @@ class AdminTeachersScreen extends ConsumerWidget {
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                 ),
+                if (!isEdit) ...[
+                  const SizedBox(height: 20),
+                  Text(
+                    'Subjects they can teach',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  if (subjects.isEmpty)
+                    Text('No subjects available',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: subjects.map((s) => FilterChip(
+                        label: Text(s.name),
+                        selected: selectedSubjectIds.contains(s.id),
+                        onSelected: (selected) {
+                          setSheetState(() {
+                            if (selected) {
+                              selectedSubjectIds.add(s.id);
+                            } else {
+                              selectedSubjectIds.remove(s.id);
+                            }
+                          });
+                        },
+                      )).toList(),
+                    ),
+                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
@@ -418,12 +454,17 @@ class AdminTeachersScreen extends ConsumerWidget {
                                 'email': emailCtrl.text.trim(),
                                 'phone': phoneCtrl.text.trim(),
                               };
-                              final repo = ref.read(adminRepositoryProvider);
                               if (isEdit) {
                                 await repo.updateTeacher(existing.id, values);
                               } else {
                                 values['password'] = passwordCtrl.text.trim();
-                                await repo.createTeacher(values);
+                                final teacher =
+                                    await repo.createTeacher(values);
+                                if (selectedSubjectIds.isNotEmpty) {
+                                  await repo.setTeacherSubjects(
+                                      teacher.id,
+                                      selectedSubjectIds.toList());
+                                }
                               }
                               ref.invalidate(teachersProvider);
                               if (ctx.mounted) Navigator.pop(ctx, true);
@@ -565,60 +606,188 @@ class AdminTeachersScreen extends ConsumerWidget {
     return result ?? false;
   }
 
-  void _showTeacherDialog(
-      BuildContext context, WidgetRef ref, Teacher? existing) {
+  Future<void> _showTeacherDialog(
+      BuildContext context, WidgetRef ref, Teacher? existing) async {
     final isEdit = existing != null;
+    final repo = ref.read(adminRepositoryProvider);
+
+    if (isEdit) {
+      showDialog(
+        context: context,
+        builder: (_) => AdminFormDialog(
+          title: 'Edit Teacher',
+          submitLabel: 'Update',
+          fields: [
+            FormFieldConfig(
+              key: 'full_name',
+              label: 'Full Name',
+              required: true,
+              initialValue: existing.fullName,
+            ),
+            FormFieldConfig(
+              key: 'email',
+              label: 'Email',
+              required: true,
+              keyboardType: TextInputType.emailAddress,
+              initialValue: existing.email,
+            ),
+            FormFieldConfig(
+              key: 'phone',
+              label: 'Phone',
+              initialValue: existing.phone,
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+          onSave: (values) async {
+            await repo.updateTeacher(existing.id, values);
+            ref.invalidate(teachersProvider);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Teacher updated successfully'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+        ),
+      );
+      return;
+    }
+
+    final subjects = await repo.getSubjects();
+    if (!context.mounted) return;
+
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final passwordCtrl = TextEditingController(text: defaultUserPassword);
+    final phoneCtrl = TextEditingController();
+    final selectedSubjectIds = <String>{};
+    var saving = false;
+
     showDialog(
       context: context,
-      builder: (_) => AdminFormDialog(
-        title: isEdit ? 'Edit Teacher' : 'Add Teacher',
-        submitLabel: isEdit ? 'Update' : 'Add',
-        fields: [
-          FormFieldConfig(
-            key: 'full_name',
-            label: 'Full Name',
-            required: true,
-            initialValue: existing?.fullName,
-          ),
-          FormFieldConfig(
-            key: 'email',
-            label: 'Email',
-            required: true,
-            keyboardType: TextInputType.emailAddress,
-            initialValue: existing?.email,
-          ),
-          if (!isEdit)
-            FormFieldConfig(
-              key: 'password',
-              label: 'Password',
-              required: true,
-              obscureText: true,
-              initialValue: defaultUserPassword,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Add Teacher'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name *',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email *',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordCtrl,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Password *',
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Subjects they can teach',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (subjects.isEmpty)
+                  Text('No subjects available',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: subjects.map((s) => FilterChip(
+                      label: Text(s.name),
+                      selected: selectedSubjectIds.contains(s.id),
+                      onSelected: (selected) {
+                        setDialogState(() {
+                          if (selected) {
+                            selectedSubjectIds.add(s.id);
+                          } else {
+                            selectedSubjectIds.remove(s.id);
+                          }
+                        });
+                      },
+                    )).toList(),
+                  ),
+              ],
             ),
-          FormFieldConfig(
-            key: 'phone',
-            label: 'Phone',
-            initialValue: existing?.phone,
-            keyboardType: TextInputType.phone,
           ),
-        ],
-        onSave: (values) async {
-          final repo = ref.read(adminRepositoryProvider);
-          if (isEdit) {
-            await repo.updateTeacher(existing.id, values);
-          } else {
-            await repo.createTeacher(values);
-          }
-          ref.invalidate(teachersProvider);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(isEdit ? 'Teacher updated successfully' : 'Teacher added successfully'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            CustomButton(
+              label: 'Add',
+              loading: saving,
+              onPressed: nameCtrl.text.isNotEmpty && emailCtrl.text.isNotEmpty ? () async {
+                setDialogState(() => saving = true);
+                try {
+                  final teacher = await repo.createTeacher({
+                    'full_name': nameCtrl.text.trim(),
+                    'email': emailCtrl.text.trim(),
+                    'password': passwordCtrl.text.trim(),
+                    'phone': phoneCtrl.text.trim(),
+                  });
+                  if (selectedSubjectIds.isNotEmpty) {
+                    await repo.setTeacherSubjects(teacher.id, selectedSubjectIds.toList());
+                  }
+                  ref.invalidate(teachersProvider);
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Teacher added successfully'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (ctx.mounted) {
+                    setDialogState(() => saving = false);
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed: $e'),
+                        backgroundColor: AppColors.error,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              } : null,
+            ),
+          ],
+        ),
       ),
     );
   }

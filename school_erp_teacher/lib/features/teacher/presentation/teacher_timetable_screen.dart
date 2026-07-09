@@ -6,154 +6,174 @@ import 'package:school_erp_teacher/features/auth/presentation/providers/auth_sta
 import 'package:school_erp_teacher/features/teacher/domain/teacher_models.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_dashboard_screen.dart';
 
-final teacherTimetableProvider =
-    FutureProvider.family<List<TimetableEntry>, String>((ref, classId) {
-  final repo = ref.watch(teacherRepositoryProvider);
-  return repo.getClassTimetable(classId);
-});
+const _dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const _dayLabels = {
+  'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
+  'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday',
+};
+const _subjectColors = [
+  Color(0xFF4F6EF7), Color(0xFF22C55E), Color(0xFFF59E0B),
+  Color(0xFFEF4444), Color(0xFF8B5CF6), Color(0xFF06B6D4),
+  Color(0xFFEC4899), Color(0xFF84CC16),
+];
 
-final teacherClassesForTimetableProvider =
-    FutureProvider<List<TeacherClass>>((ref) {
+Color _colorForSubject(String subjectId) {
+  return _subjectColors[subjectId.hashCode.abs() % _subjectColors.length];
+}
+
+final teacherTimetableProvider = FutureProvider<List<TimetableEntry>>((ref) {
   final teacherId = ref.watch(authStateProvider).user?.teacherId ?? '';
+  if (teacherId.isEmpty) return Future.value([]);
   final repo = ref.watch(teacherRepositoryProvider);
-  return repo.getTeacherClasses(teacherId);
+  return repo.getTeacherTimetable(teacherId);
 });
 
 class TeacherTimetableScreen extends ConsumerStatefulWidget {
   const TeacherTimetableScreen({super.key});
 
   @override
-  ConsumerState<TeacherTimetableScreen> createState() =>
-      _TeacherTimetableScreenState();
+  ConsumerState<TeacherTimetableScreen> createState() => _TeacherTimetableScreenState();
 }
 
-class _TeacherTimetableScreenState
-    extends ConsumerState<TeacherTimetableScreen> {
-  String? _selectedClassId;
-
+class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen> {
   @override
   Widget build(BuildContext context) {
-    final classesAsync = ref.watch(teacherClassesForTimetableProvider);
+    final timetableAsync = ref.watch(teacherTimetableProvider);
+    final now = DateTime.now();
+    final todayDay = _dayOrder[now.weekday - 1 < _dayOrder.length ? now.weekday - 1 : 0];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Timetable')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            classesAsync.when(
-              loading: () => const CircularProgressIndicator(),
-              error: (e, _) =>
-                  Text('Failed to load classes: $e',
-                      style: const TextStyle(color: AppColors.error)),
-              data: (classes) {
-                final uniqueClasses = <String, String>{};
-                for (final c in classes) {
-                  uniqueClasses[c.classId] = c.display;
-                }
-                return GlassCard(
-                  child:                 DropdownButtonFormField<String>(
-                    initialValue: _selectedClassId,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.school),
-                      labelText: 'Select Class',
-                    ),
-                    items: uniqueClasses.entries
-                        .map((e) => DropdownMenuItem(
-                              value: e.key,
-                              child: Text(e.value),
-                            ))
-                        .toList(),
-                    onChanged: (id) {
-                      setState(() => _selectedClassId = id);
-                    },
-                  ),
-                );
-              },
-            ),
-            if (_selectedClassId != null) ...[
-              const SizedBox(height: 16),
-              Expanded(
-                child: ref
-                    .watch(teacherTimetableProvider(_selectedClassId!))
-                    .when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) =>
-                          Text('Failed to load timetable: $e'),
-                      data: (entries) {
-                        final now = DateTime.now();
-                        final days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-                        final todayDay = days[now.weekday - 1];
-                        final todayEntries = entries
-                            .where((e) => e.day == todayDay)
-                            .toList()
-                          ..sort((a, b) =>
-                              a.startTime.compareTo(b.startTime));
-                        return _todayTimetableView(context, todayEntries);
-                      },
-                    ),
-              ),
-            ],
-          ],
+      appBar: AppBar(title: const Text('My Timetable')),
+      body: timetableAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Text('Failed to load timetable: $e', style: const TextStyle(color: AppColors.error)),
         ),
+        data: (entries) {
+          if (entries.isEmpty) {
+            return Center(
+              child: GlassCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_month, size: 48, color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                      const SizedBox(height: 12),
+                      Text('No timetable entries found', style: Theme.of(context).textTheme.bodyMedium),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+          return _buildWeeklyView(context, entries, todayDay);
+        },
       ),
     );
   }
 
-  Widget _todayTimetableView(
-      BuildContext context, List<TimetableEntry> entries) {
-    if (entries.isEmpty) {
-      return GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle,
-                  color: AppColors.success, size: 24),
-              const SizedBox(width: 12),
-              Text('No classes scheduled for today',
-                  style: Theme.of(context).textTheme.bodyMedium),
-            ],
-          ),
-        ),
-      );
+  Widget _buildWeeklyView(BuildContext context, List<TimetableEntry> entries, String todayDay) {
+    final grouped = <String, List<TimetableEntry>>{};
+    for (final d in _dayOrder) { grouped[d] = []; }
+    for (final e in entries) {
+      grouped[e.day]?.add(e);
+    }
+    for (final d in _dayOrder) {
+      grouped[d]!.sort((a, b) => a.startTime.compareTo(b.startTime));
     }
 
-    return ListView(
-      children: entries.map(
-        (e) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: GlassCard(
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(2),
+    final now = DateTime.now();
+    final currentMinutes = now.hour * 60 + now.minute;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: _dayOrder.map((day) {
+          final dayEntries = grouped[day]!;
+          if (dayEntries.isEmpty) return const SizedBox.shrink();
+          final isToday = day == todayDay;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: GlassCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Row(
+                      children: [
+                        Text(
+                          _dayLabels[day] ?? day,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: isToday ? AppColors.primary : null,
+                          ),
+                        ),
+                        if (isToday) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text('Today', style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(e.subjectName ?? 'Subject',
-                          style:
-                              Theme.of(context).textTheme.titleMedium),
-                      Text('${e.startTime} - ${e.endTime}',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium),
-                    ],
-                  ),
-                ),
-              ],
+                  const Divider(height: 1),
+                  ...dayEntries.map((e) {
+                    final color = _colorForSubject(e.subjectId);
+                    final startParts = e.startTime.split(':');
+                    final endParts = e.endTime.split(':');
+                    final startMin = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+                    final endMin = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
+                    final isOngoing = isToday && currentMinutes >= startMin && currentMinutes <= endMin;
+
+                    return ListTile(
+                      leading: Container(
+                        width: 4,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isOngoing ? AppColors.success : color,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      title: Text(e.subjectName ?? '', style: const TextStyle(fontWeight: FontWeight.w500)),
+                      subtitle: Text(
+                        '${e.startTime} - ${e.endTime}  |  ${e.classDisplay}${e.room != null && e.room!.isNotEmpty ? '  Room: ${e.room}' : ''}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      trailing: isOngoing
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.success.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.play_arrow, size: 14, color: AppColors.success),
+                                  SizedBox(width: 4),
+                                  Text('Ongoing', style: TextStyle(fontSize: 11, color: AppColors.success, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            )
+                          : null,
+                    );
+                  }),
+                ],
+              ),
             ),
-          ),
-        ),
-      ).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 }

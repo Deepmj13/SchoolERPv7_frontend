@@ -6,6 +6,7 @@ import 'package:school_erp_student/features/student/presentation/student_attenda
 import 'package:school_erp_student/features/student/presentation/student_dashboard_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_fees_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_fee_post_detail_screen.dart';
+import 'package:school_erp_student/features/student/presentation/student_holidays_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_assignment_detail_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_assignments_screen.dart';
 import 'package:school_erp_student/features/student/presentation/student_notices_screen.dart';
@@ -85,6 +86,11 @@ GoRouter createRouter(StorageInterface storage) {
             path: '/student/notices',
             name: RouteNames.studentNotices,
             builder: (context, state) => const StudentNoticesScreen(),
+          ),
+          GoRoute(
+            path: '/student/holidays',
+            name: RouteNames.studentHolidays,
+            builder: (context, state) => const StudentHolidaysScreen(),
           ),
           GoRoute(
             path: '/student/remarks',

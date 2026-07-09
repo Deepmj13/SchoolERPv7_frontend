@@ -8,6 +8,7 @@ import 'package:school_erp_teacher/features/teacher/presentation/teacher_dashboa
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_marks_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_assignment_detail_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_assignments_screen.dart';
+import 'package:school_erp_teacher/features/teacher/presentation/teacher_holidays_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_notices_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_profile_screen.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_remarks_screen.dart';
@@ -65,6 +66,11 @@ GoRouter createRouter(StorageInterface storage) {
             path: '/teacher/notices',
             name: RouteNames.teacherNotices,
             builder: (context, state) => const TeacherNoticesScreen(),
+          ),
+          GoRoute(
+            path: '/teacher/holidays',
+            name: RouteNames.teacherHolidays,
+            builder: (context, state) => const TeacherHolidaysScreen(),
           ),
           GoRoute(
             path: '/teacher/assignments',

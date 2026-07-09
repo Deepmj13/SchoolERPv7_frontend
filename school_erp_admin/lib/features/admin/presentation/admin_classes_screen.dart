@@ -238,7 +238,7 @@ class AdminClassesScreen extends ConsumerWidget {
     final teacherOptions = activeTeachers.map((t) => t.fullName).toList();
     final teacherMap = <String, String>{};
     for (final t in activeTeachers) {
-      teacherMap[t.fullName] = t.id;
+      teacherMap[t.fullName] = t.userId;
     }
 
     final nameCtrl = TextEditingController(text: existing?.name ?? '');
@@ -508,7 +508,7 @@ class AdminClassesScreen extends ConsumerWidget {
         .toList();
     final teacherMap = <String, String>{};
     for (final t in teachers.where((t) => t.isActive)) {
-      teacherMap[t.fullName] = t.id;
+      teacherMap[t.fullName] = t.userId;
     }
 
     if (!context.mounted) return;

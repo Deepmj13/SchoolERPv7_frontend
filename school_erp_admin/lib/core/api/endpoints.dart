@@ -12,15 +12,19 @@ class Endpoints {
   static const String changePassword = '$apiPrefix/auth/change-password';
 
   static const String dashboardStats = '$apiPrefix/admin/dashboard/stats';
+  static const String schoolProfile = '$apiPrefix/admin/school';
 
   static const String students = '$apiPrefix/students';
   static String student(String id) => '$apiPrefix/students/$id';
   static String activateStudent(String id) =>
       '$apiPrefix/students/$id/activate';
+  static const String studentsPromote = '$apiPrefix/students/promote';
 
   static const String teachers = '$apiPrefix/teachers';
   static String teacher(String id) => '$apiPrefix/teachers/$id';
   static String teacherClasses(String id) => '$apiPrefix/teachers/$id/classes';
+  static String teacherSubjects(String id) => '$apiPrefix/teachers/$id/subjects';
+  static String teacherTimetable(String id) => '$apiPrefix/teachers/$id/timetable';
 
   static const String classes = '$apiPrefix/classes';
   static String classById(String id) => '$apiPrefix/classes/$id';
@@ -34,6 +38,7 @@ class Endpoints {
       '$apiPrefix/attendance/student/$id';
 
   static const String subjects = '$apiPrefix/subjects';
+  static const String subjectsByClass = '$apiPrefix/subjects/by-class';
   static String assignSubject(String id) => '$apiPrefix/subjects/$id/assign';
 
   static const String exams = '$apiPrefix/exams';
@@ -53,4 +58,29 @@ class Endpoints {
 
   static const String announcements = '$apiPrefix/announcements';
   static String announcement(String id) => '$apiPrefix/announcements/$id';
+
+  static const String reportStudentStrength = '$apiPrefix/reports/student-strength';
+  static const String reportAttendance = '$apiPrefix/reports/attendance';
+  static const String reportFeeCollection = '$apiPrefix/reports/fee-collection';
+  static const String reportTeacherWorkload = '$apiPrefix/reports/teacher-workload';
+  static const String reportAdmissions = '$apiPrefix/reports/admissions';
+
+  static const String gradingSystems = '$apiPrefix/grading';
+  static String gradingSystem(String id) => '$apiPrefix/grading/$id';
+  static const String gradingFindGrade = '$apiPrefix/grading/find-grade';
+
+  static String examSubjects(String examId) => '$apiPrefix/exams/$examId/subjects';
+  static String examSubject(String examId, String subjectId) =>
+      '$apiPrefix/exams/$examId/subjects/$subjectId';
+
+  static const String staff = '$apiPrefix/staff';
+  static String staffMember(String id) => '$apiPrefix/staff/$id';
+  static const String staffDepartments = '$apiPrefix/staff/departments';
+
+  static const String holidays = '$apiPrefix/holidays';
+  static String holiday(String id) => '$apiPrefix/holidays/$id';
+
+  static const String resultsBulk = '$apiPrefix/results/bulk';
+  static const String results = '$apiPrefix/results';
+  static String studentResults(String id) => '$apiPrefix/results/student/$id';
 }

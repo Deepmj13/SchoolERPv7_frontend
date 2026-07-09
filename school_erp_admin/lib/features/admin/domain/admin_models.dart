@@ -1,3 +1,52 @@
+class SchoolProfile {
+  final String id;
+  final String name;
+  final String? address;
+  final String? phone;
+  final String? email;
+  final String? website;
+  final String? logoUrl;
+  final String? academicYear;
+  final String? establishedYear;
+
+  SchoolProfile({
+    required this.id,
+    required this.name,
+    this.address,
+    this.phone,
+    this.email,
+    this.website,
+    this.logoUrl,
+    this.academicYear,
+    this.establishedYear,
+  });
+
+  factory SchoolProfile.fromJson(Map<String, dynamic> json) => SchoolProfile(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        address: json['address'] as String?,
+        phone: json['phone'] as String?,
+        email: json['email'] as String?,
+        website: json['website'] as String?,
+        logoUrl: json['logo_url'] as String?,
+        academicYear: json['academic_year'] as String?,
+        establishedYear: json['established_year'] as String?,
+      );
+
+  Map<String, dynamic> toUpdateJson() {
+    final map = <String, dynamic>{};
+    if (name.isNotEmpty) map['name'] = name;
+    if (address != null) map['address'] = address;
+    if (phone != null) map['phone'] = phone;
+    if (email != null) map['email'] = email;
+    if (website != null) map['website'] = website;
+    if (logoUrl != null) map['logo_url'] = logoUrl;
+    if (academicYear != null) map['academic_year'] = academicYear;
+    if (establishedYear != null) map['established_year'] = establishedYear;
+    return map;
+  }
+}
+
 class DashboardStats {
   final int totalStudents;
   final int totalTeachers;
@@ -176,6 +225,31 @@ class Subject {
 
   @override
   int get hashCode => id.hashCode;
+}
+
+class ClassSubjects {
+  final String classId;
+  final String className;
+  final String section;
+  final List<Subject> subjects;
+
+  ClassSubjects({
+    required this.classId,
+    required this.className,
+    required this.section,
+    required this.subjects,
+  });
+
+  factory ClassSubjects.fromJson(Map<String, dynamic> json) => ClassSubjects(
+        classId: json['class_id'] as String,
+        className: json['class_name'] as String,
+        section: json['section'] as String,
+        subjects: (json['subjects'] as List)
+            .map((e) => Subject.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  String get displayName => '$className${section.isNotEmpty ? ' - $section' : ''}';
 }
 
 class ClassModel {
@@ -368,8 +442,11 @@ class TimetableEntry {
   final String day;
   final String startTime;
   final String endTime;
+  final String? room;
   final String? subjectName;
   final String? teacherName;
+  final String? className;
+  final String? classSection;
 
   TimetableEntry({
     required this.id,
@@ -379,8 +456,11 @@ class TimetableEntry {
     required this.day,
     required this.startTime,
     required this.endTime,
+    this.room,
     this.subjectName,
     this.teacherName,
+    this.className,
+    this.classSection,
   });
 
   factory TimetableEntry.fromJson(Map<String, dynamic> json) => TimetableEntry(
@@ -391,8 +471,11 @@ class TimetableEntry {
         day: json['day'] as String,
         startTime: json['start_time'] as String,
         endTime: json['end_time'] as String,
+        room: json['room'] as String?,
         subjectName: json['subject_name'] as String?,
         teacherName: json['teacher_name'] as String?,
+        className: json['class_name'] as String?,
+        classSection: json['class_section'] as String?,
       );
 
   String get dayLabel {
@@ -402,6 +485,8 @@ class TimetableEntry {
     };
     return days[day] ?? day;
   }
+
+  String get classDisplay => className != null ? '$className${classSection != null && classSection!.isNotEmpty ? ' - $classSection' : ''}' : '';
 }
 
 class FeeStructure {
@@ -497,6 +582,96 @@ class UnpaidFeeItem {
       );
 }
 
+class StaffMember {
+  final String id;
+  final String userId;
+  final String fullName;
+  final String? email;
+  final String? phone;
+  final String? department;
+  final String? designation;
+  final double? salary;
+  final String? joiningDate;
+  final bool isActive;
+
+  StaffMember({
+    required this.id,
+    required this.userId,
+    required this.fullName,
+    this.email,
+    this.phone,
+    this.department,
+    this.designation,
+    this.salary,
+    this.joiningDate,
+    required this.isActive,
+  });
+
+  factory StaffMember.fromJson(Map<String, dynamic> json) => StaffMember(
+        id: json['id'] as String,
+        userId: json['user_id'] as String,
+        fullName: json['full_name'] as String,
+        email: json['email'] as String?,
+        phone: json['phone'] as String?,
+        department: json['department'] as String?,
+        designation: json['designation'] as String?,
+        salary: json['salary'] != null ? double.tryParse(json['salary'].toString()) : null,
+        joiningDate: json['joining_date'] as String?,
+        isActive: json['is_active'] as bool? ?? true,
+      );
+
+  Map<String, dynamic> toCreateJson() => {
+        'email': email,
+        'password': defaultUserPassword,
+        'full_name': fullName,
+        'phone': phone,
+        'department': department,
+        'designation': designation,
+        'salary': salary,
+        'joining_date': joiningDate,
+      };
+
+  Map<String, dynamic> toUpdateJson() => {
+        'full_name': fullName,
+        'phone': phone,
+        'department': department,
+        'designation': designation,
+        'salary': salary,
+        'joining_date': joiningDate,
+        'is_active': isActive,
+      };
+}
+
+class Holiday {
+  final String id;
+  final String title;
+  final String? description;
+  final String date;
+  final String type;
+  final bool isRecurring;
+
+  Holiday({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.date,
+    this.type = 'holiday',
+    this.isRecurring = false,
+  });
+
+  factory Holiday.fromJson(Map<String, dynamic> json) => Holiday(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String?,
+        date: json['date'] as String,
+        type: json['type'] as String? ?? 'holiday',
+        isRecurring: json['is_recurring'] as bool? ?? false,
+      );
+
+  bool get isHoliday => type == 'holiday';
+  String get displayType => isHoliday ? 'Holiday' : 'Event';
+}
+
 const String defaultUserPassword = 'ChangeMe@123';
 
 class FeePayment {
@@ -532,5 +707,94 @@ class FeePayment {
         paymentDate: json['payment_date'] as String,
         paymentMode: json['payment_mode'] as String?,
         status: json['status'] as String? ?? 'pending',
+      );
+}
+
+class GradingRange {
+  final String id;
+  final String gradingSystemId;
+  final String grade;
+  final double minPercentage;
+  final double maxPercentage;
+  final double? gradePoint;
+  final String? description;
+
+  GradingRange({
+    required this.id,
+    required this.gradingSystemId,
+    required this.grade,
+    required this.minPercentage,
+    required this.maxPercentage,
+    this.gradePoint,
+    this.description,
+  });
+
+  factory GradingRange.fromJson(Map<String, dynamic> json) => GradingRange(
+        id: json['id'] as String,
+        gradingSystemId: json['grading_system_id'] as String,
+        grade: json['grade'] as String,
+        minPercentage: double.parse(json['min_percentage'].toString()),
+        maxPercentage: double.parse(json['max_percentage'].toString()),
+        gradePoint: json['grade_point'] != null ? double.parse(json['grade_point'].toString()) : null,
+        description: json['description'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'grade': grade,
+        'min_percentage': minPercentage,
+        'max_percentage': maxPercentage,
+        'grade_point': gradePoint,
+        'description': description,
+      };
+}
+
+class GradingSystem {
+  final String id;
+  final String name;
+  final bool isActive;
+  final List<GradingRange> ranges;
+
+  GradingSystem({
+    required this.id,
+    required this.name,
+    this.isActive = true,
+    this.ranges = const [],
+  });
+
+  factory GradingSystem.fromJson(Map<String, dynamic> json) => GradingSystem(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        isActive: json['is_active'] as bool? ?? true,
+        ranges: (json['ranges'] as List?)
+                ?.map((e) => GradingRange.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
+      );
+}
+
+class ExamSubject {
+  final String id;
+  final String examId;
+  final String subjectId;
+  final String subjectName;
+  final double maxMarks;
+  final double? passingMarks;
+
+  ExamSubject({
+    required this.id,
+    required this.examId,
+    required this.subjectId,
+    required this.subjectName,
+    required this.maxMarks,
+    this.passingMarks,
+  });
+
+  factory ExamSubject.fromJson(Map<String, dynamic> json) => ExamSubject(
+        id: json['id'] as String,
+        examId: json['exam_id'] as String,
+        subjectId: json['subject_id'] as String,
+        subjectName: json['subject_name'] as String? ?? '',
+        maxMarks: double.parse(json['max_marks'].toString()),
+        passingMarks: json['passing_marks'] != null ? double.parse(json['passing_marks'].toString()) : null,
       );
 }

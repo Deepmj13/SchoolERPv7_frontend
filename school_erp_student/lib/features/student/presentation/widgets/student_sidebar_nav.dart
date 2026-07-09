@@ -98,6 +98,12 @@ class StudentSidebarNav extends StatelessWidget {
               isActive: currentRoute == '/student/remarks',
             ),
             _NavItem(
+              icon: Icons.event_rounded,
+              label: 'Holidays',
+              route: '/student/holidays',
+              isActive: currentRoute == '/student/holidays',
+            ),
+            _NavItem(
               icon: Icons.person_rounded,
               label: 'Profile',
               route: '/student/profile',

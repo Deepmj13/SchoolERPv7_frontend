@@ -7,7 +7,13 @@ import 'package:school_erp_admin/features/admin/presentation/admin_classes_scree
 import 'package:school_erp_admin/features/admin/presentation/admin_dashboard_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_exams_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_fees_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_grading_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_holidays_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_mark_entry_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_more_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_promotion_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_reports_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_staff_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_settings_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_shell.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_students_screen.dart';
@@ -123,6 +129,54 @@ GoRouter createRouter(StorageInterface storage) {
             name: RouteNames.adminSettings,
             pageBuilder: (context, state) => _fadePage(
               const AdminSettingsScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/reports',
+            name: RouteNames.adminReports,
+            pageBuilder: (context, state) => _fadePage(
+              const AdminReportsScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/grading',
+            name: RouteNames.adminGrading,
+            pageBuilder: (context, state) => _fadePage(
+              const AdminGradingScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/holidays',
+            name: RouteNames.adminHolidays,
+            pageBuilder: (context, state) => _fadePage(
+              const AdminHolidaysScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/promotion',
+            name: RouteNames.adminPromotion,
+            pageBuilder: (context, state) => _fadePage(
+              const AdminPromotionScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/staff',
+            name: RouteNames.adminStaff,
+            pageBuilder: (context, state) => _fadePage(
+              const AdminStaffScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/mark-entry/:examId',
+            name: RouteNames.adminMarkEntry,
+            pageBuilder: (context, state) => _fadePage(
+              AdminMarkEntryScreen(examId: state.pathParameters['examId']!),
               state,
             ),
           ),

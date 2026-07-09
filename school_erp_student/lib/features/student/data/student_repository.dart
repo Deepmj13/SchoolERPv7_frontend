@@ -76,4 +76,14 @@ class StudentRepository {
   Future<void> markRemarkRead(String remarkId) async {
     await _api.patch(Endpoints.markRemarkRead(remarkId));
   }
+
+  Future<List<Holiday>> getHolidays() async {
+    final data = await _api.get(Endpoints.holidays);
+    if (data is List) {
+      return data
+          .map((e) => Holiday.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+    return [];
+  }
 }

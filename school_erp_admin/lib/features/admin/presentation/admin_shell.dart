@@ -246,9 +246,21 @@ class _MobileLayoutState extends State<_MobileLayout> {
                     currentRoute: currentRoute,
                   ),
                   _drawerItem(
+                    icon: Icons.arrow_upward_rounded,
+                    label: 'Promotion',
+                    route: '/admin/promotion',
+                    currentRoute: currentRoute,
+                  ),
+                  _drawerItem(
                     icon: Icons.assignment_rounded,
                     label: 'Exams',
                     route: '/admin/exams',
+                    currentRoute: currentRoute,
+                  ),
+                  _drawerItem(
+                    icon: Icons.grade_rounded,
+                    label: 'Grading',
+                    route: '/admin/grading',
                     currentRoute: currentRoute,
                   ),
                   _drawerItem(
@@ -258,9 +270,27 @@ class _MobileLayoutState extends State<_MobileLayout> {
                     currentRoute: currentRoute,
                   ),
                   _drawerItem(
+                    icon: Icons.groups_rounded,
+                    label: 'Staff',
+                    route: '/admin/staff',
+                    currentRoute: currentRoute,
+                  ),
+                  _drawerItem(
                     icon: Icons.trending_up_rounded,
                     label: 'Attendance',
                     route: '/admin/attendance-report',
+                    currentRoute: currentRoute,
+                  ),
+                  _drawerItem(
+                    icon: Icons.bar_chart_rounded,
+                    label: 'Reports',
+                    route: '/admin/reports',
+                    currentRoute: currentRoute,
+                  ),
+                  _drawerItem(
+                    icon: Icons.event_rounded,
+                    label: 'Holidays',
+                    route: '/admin/holidays',
                     currentRoute: currentRoute,
                   ),
                   const Divider(height: 1),

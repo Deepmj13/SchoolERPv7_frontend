@@ -92,6 +92,12 @@ class TeacherSidebarNav extends StatelessWidget {
               isActive: currentRoute == '/teacher/notices',
             ),
             _NavItem(
+              icon: Icons.event_rounded,
+              label: 'Holidays',
+              route: '/teacher/holidays',
+              isActive: currentRoute == '/teacher/holidays',
+            ),
+            _NavItem(
               icon: Icons.person_rounded,
               label: 'Profile',
               route: '/teacher/profile',

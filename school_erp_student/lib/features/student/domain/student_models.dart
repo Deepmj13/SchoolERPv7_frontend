@@ -342,3 +342,33 @@ class DashboardData {
     this.recentNotices = const [],
   });
 }
+
+class Holiday {
+  final String id;
+  final String title;
+  final String? description;
+  final String date;
+  final String type;
+  final bool isRecurring;
+
+  Holiday({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.date,
+    this.type = 'holiday',
+    this.isRecurring = false,
+  });
+
+  factory Holiday.fromJson(Map<String, dynamic> json) => Holiday(
+        id: json['id'] as String,
+        title: json['title'] as String,
+        description: json['description'] as String?,
+        date: json['date'] as String,
+        type: json['type'] as String? ?? 'holiday',
+        isRecurring: json['is_recurring'] as bool? ?? false,
+      );
+
+  bool get isHoliday => type == 'holiday';
+  String get displayType => isHoliday ? 'Holiday' : 'Event';
+}

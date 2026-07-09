@@ -102,6 +102,7 @@ class TeacherShell extends ConsumerWidget {
     if (route == '/teacher/marks' ||
         route == '/teacher/assignments' ||
         route == '/teacher/announcements' ||
+        route == '/teacher/holidays' ||
         route == '/teacher/notices' ||
         route == '/teacher/profile') {
       return 2;

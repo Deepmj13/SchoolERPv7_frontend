@@ -7,6 +7,88 @@ class AdminRepository {
 
   AdminRepository(this._api);
 
+  Future<PaginatedResponse<StaffMember>> getStaffPage({
+    int page = 1,
+    int limit = 20,
+    String? department,
+  }) async {
+    try {
+      final params = <String, String>{'page': '$page', 'limit': '$limit'};
+      if (department != null && department.isNotEmpty) params['department'] = department;
+      final data = await _api.get(Endpoints.staff, queryParams: params);
+      return PaginatedResponse.fromJson(data, StaffMember.fromJson);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to parse staff data: $e');
+    }
+  }
+
+  Future<StaffMember> createStaff(Map<String, dynamic> body) async {
+    try {
+      final data = await _api.post(Endpoints.staff, body: body);
+      return StaffMember.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to create staff: $e');
+    }
+  }
+
+  Future<StaffMember> updateStaff(String id, Map<String, dynamic> body) async {
+    try {
+      final data = await _api.put(Endpoints.staffMember(id), body: body);
+      return StaffMember.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to update staff: $e');
+    }
+  }
+
+  Future<void> deleteStaff(String id) async {
+    try {
+      await _api.delete(Endpoints.staffMember(id));
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to delete staff: $e');
+    }
+  }
+
+  Future<List<String>> getStaffDepartments() async {
+    try {
+      final data = await _api.get(Endpoints.staffDepartments);
+      return (data as List).cast<String>();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load departments: $e');
+    }
+  }
+
+  Future<SchoolProfile> getSchoolProfile() async {
+    try {
+      final data = await _api.get(Endpoints.schoolProfile);
+      return SchoolProfile.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load school profile: $e');
+    }
+  }
+
+  Future<SchoolProfile> updateSchoolProfile(Map<String, dynamic> body) async {
+    try {
+      final data = await _api.put(Endpoints.schoolProfile, body: body);
+      return SchoolProfile.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to update school profile: $e');
+    }
+  }
+
   Future<DashboardStats> getDashboardStats() async {
     try {
       final data = await _api.get(Endpoints.dashboardStats);
@@ -166,6 +248,30 @@ class AdminRepository {
       rethrow;
     } catch (e) {
       throw ApiException(0, 'Failed to parse subjects: $e');
+    }
+  }
+
+  Future<List<ClassSubjects>> getSubjectsByClass() async {
+    try {
+      final raw = await _api.get(Endpoints.subjectsByClass);
+      final list = raw is List ? raw : [];
+      return list.map((e) => ClassSubjects.fromJson(e)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to parse subjects by class: $e');
+    }
+  }
+
+  Future<void> setTeacherSubjects(String teacherId, List<String> subjectIds) async {
+    try {
+      await _api.put(Endpoints.teacherSubjects(teacherId), body: {
+        'subject_ids': subjectIds,
+      });
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to set teacher subjects: $e');
     }
   }
 
@@ -362,6 +468,31 @@ class AdminRepository {
     }
   }
 
+  Future<Exam> getExam(String id) async {
+    try {
+      final data = await _api.get(Endpoints.exam(id));
+      return Exam.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load exam: $e');
+    }
+  }
+
+  Future<void> bulkSaveResults(String examId, String subjectId, List<Map<String, dynamic>> marks) async {
+    try {
+      await _api.post(Endpoints.resultsBulk, body: {
+        'examId': examId,
+        'subjectId': subjectId,
+        'marks': marks,
+      });
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to save marks: $e');
+    }
+  }
+
   Future<Exam> createExam(Map<String, dynamic> body) async {
     try {
       final data = await _api.post(Endpoints.exams, body: body);
@@ -385,6 +516,17 @@ class AdminRepository {
     }
   }
 
+  Future<Map<String, dynamic>> promoteStudents(Map<String, dynamic> body) async {
+    try {
+      final data = await _api.post(Endpoints.studentsPromote, body: body);
+      return data as Map<String, dynamic>;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to promote students: $e');
+    }
+  }
+
   Future<void> deleteExam(String id) async {
     try {
       await _api.delete(Endpoints.exam(id));
@@ -392,6 +534,92 @@ class AdminRepository {
       rethrow;
     } catch (e) {
       throw ApiException(0, 'Failed to delete exam: $e');
+    }
+  }
+
+  Future<List<GradingSystem>> getGradingSystems() async {
+    try {
+      final data = await _api.get(Endpoints.gradingSystems);
+      return (data as List).map((e) => GradingSystem.fromJson(e)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load grading systems: $e');
+    }
+  }
+
+  Future<GradingSystem> createGradingSystem(Map<String, dynamic> body) async {
+    try {
+      final data = await _api.post(Endpoints.gradingSystems, body: body);
+      return GradingSystem.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to create grading system: $e');
+    }
+  }
+
+  Future<GradingSystem> updateGradingSystem(String id, Map<String, dynamic> body) async {
+    try {
+      final data = await _api.put(Endpoints.gradingSystem(id), body: body);
+      return GradingSystem.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to update grading system: $e');
+    }
+  }
+
+  Future<void> deleteGradingSystem(String id) async {
+    try {
+      await _api.delete(Endpoints.gradingSystem(id));
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to delete grading system: $e');
+    }
+  }
+
+  Future<List<ExamSubject>> getExamSubjects(String examId) async {
+    try {
+      final data = await _api.get(Endpoints.examSubjects(examId));
+      return (data as List).map((e) => ExamSubject.fromJson(e)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load exam subjects: $e');
+    }
+  }
+
+  Future<ExamSubject> addExamSubject(String examId, Map<String, dynamic> body) async {
+    try {
+      final data = await _api.post(Endpoints.examSubjects(examId), body: body);
+      return ExamSubject.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to add exam subject: $e');
+    }
+  }
+
+  Future<void> removeExamSubject(String examId, String subjectId) async {
+    try {
+      await _api.delete(Endpoints.examSubject(examId, subjectId));
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to remove exam subject: $e');
+    }
+  }
+
+  Future<List<TimetableEntry>> getTeacherTimetable(String teacherId) async {
+    try {
+      final data = await _api.get(Endpoints.teacherTimetable(teacherId));
+      return (data as List).map((e) => TimetableEntry.fromJson(e)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to parse teacher timetable: $e');
     }
   }
 
@@ -472,11 +700,12 @@ class AdminRepository {
     }
   }
 
-  Future<List<UnpaidFeeItem>> getUnpaidFees({String? classId, String? paymentFilter}) async {
+  Future<List<UnpaidFeeItem>> getUnpaidFees({String? classId, String? paymentFilter, String? search}) async {
     try {
       final params = <String, String>{};
       if (classId != null && classId.isNotEmpty) params['class_id'] = classId;
       if (paymentFilter != null && paymentFilter.isNotEmpty) params['payment_filter'] = paymentFilter;
+      if (search != null && search.isNotEmpty) params['search'] = search;
       final raw = await _api.get(
         Endpoints.feesUnpaid,
         queryParams: params.isNotEmpty ? params : null,
@@ -546,6 +775,89 @@ class AdminRepository {
       rethrow;
     } catch (e) {
       throw ApiException(0, 'Failed to parse attendance data: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getReportJson(String endpoint,
+      {String? classId, String? startDate, String? endDate, String? groupBy}) async {
+    try {
+      final params = <String, String>{};
+      if (classId != null) params['class_id'] = classId;
+      if (startDate != null) params['start_date'] = startDate;
+      if (endDate != null) params['end_date'] = endDate;
+      if (groupBy != null) params['group_by'] = groupBy;
+      final data = await _api.get(endpoint, queryParams: params);
+      return data as Map<String, dynamic>;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load report: $e');
+    }
+  }
+
+  Future<List<Holiday>> getHolidays({String? year, String? month}) async {
+    try {
+      final params = <String, String>{};
+      if (year != null) params['year'] = year;
+      if (month != null) params['month'] = month;
+      final raw = await _api.get(
+        Endpoints.holidays,
+        queryParams: params.isNotEmpty ? params : null,
+      );
+      final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+      return list.map((e) => Holiday.fromJson(e)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load holidays: $e');
+    }
+  }
+
+  Future<Holiday> createHoliday(Map<String, dynamic> body) async {
+    try {
+      final data = await _api.post(Endpoints.holidays, body: body);
+      return Holiday.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to create holiday: $e');
+    }
+  }
+
+  Future<Holiday> updateHoliday(String id, Map<String, dynamic> body) async {
+    try {
+      final data = await _api.put(Endpoints.holiday(id), body: body);
+      return Holiday.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to update holiday: $e');
+    }
+  }
+
+  Future<void> deleteHoliday(String id) async {
+    try {
+      await _api.delete(Endpoints.holiday(id));
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to delete holiday: $e');
+    }
+  }
+
+  Future<List<int>> downloadReport(String endpoint,
+      {String? classId, String? startDate, String? endDate, String? groupBy, required String format}) async {
+    try {
+      final params = <String, String>{'format': format};
+      if (classId != null) params['class_id'] = classId;
+      if (startDate != null) params['start_date'] = startDate;
+      if (endDate != null) params['end_date'] = endDate;
+      if (groupBy != null) params['group_by'] = groupBy;
+      return await _api.download(endpoint, queryParams: params);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to download report: $e');
     }
   }
 }

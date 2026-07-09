@@ -74,12 +74,17 @@ class SidebarNav extends ConsumerWidget {
     final items = [
       (Icons.dashboard_rounded, 'Dashboard', '/admin/dashboard'),
       (Icons.people_rounded, 'Students', '/admin/students'),
+      (Icons.arrow_upward_rounded, 'Promotion', '/admin/promotion'),
+      (Icons.event_rounded, 'Holidays', '/admin/holidays'),
+      (Icons.groups_rounded, 'Staff', '/admin/staff'),
       (Icons.person_rounded, 'Teachers', '/admin/teachers'),
       (Icons.school_rounded, 'Classes', '/admin/classes'),
       (Icons.trending_up_rounded, 'Attendance', '/admin/attendance-report'),
       (Icons.book_rounded, 'Subjects', '/admin/subjects'),
       (Icons.assignment_rounded, 'Exams', '/admin/exams'),
+      (Icons.grade_rounded, 'Grading', '/admin/grading'),
       (Icons.calendar_month_rounded, 'Timetable', '/admin/timetable'),
+      (Icons.bar_chart_rounded, 'Reports', '/admin/reports'),
       (Icons.attach_money_rounded, 'Fees', '/admin/fees'),
       (Icons.campaign_rounded, 'Announcements', '/admin/announcements'),
     ];

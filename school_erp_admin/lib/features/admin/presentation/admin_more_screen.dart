@@ -12,9 +12,16 @@ class AdminMoreScreen extends ConsumerWidget {
     academic: [
       _MoreItem(icon: Icons.school_rounded, label: 'Classes', route: '/admin/classes'),
       _MoreItem(icon: Icons.book_rounded, label: 'Subjects', route: '/admin/subjects'),
+      _MoreItem(icon: Icons.arrow_upward_rounded, label: 'Promotion', route: '/admin/promotion'),
+      _MoreItem(icon: Icons.event_rounded, label: 'Holidays', route: '/admin/holidays'),
+      _MoreItem(icon: Icons.groups_rounded, label: 'Staff', route: '/admin/staff'),
       _MoreItem(icon: Icons.assignment_rounded, label: 'Exams', route: '/admin/exams'),
+      _MoreItem(icon: Icons.grade_rounded, label: 'Grading', route: '/admin/grading'),
       _MoreItem(icon: Icons.calendar_month_rounded, label: 'Timetable', route: '/admin/timetable'),
       _MoreItem(icon: Icons.trending_up_rounded, label: 'Attendance', route: '/admin/attendance-report'),
+    ],
+    reports: [
+      _MoreItem(icon: Icons.bar_chart_rounded, label: 'Reports', route: '/admin/reports'),
     ],
     communication: [
       _MoreItem(icon: Icons.campaign_rounded, label: 'Announcements', route: '/admin/announcements'),
@@ -35,6 +42,8 @@ class AdminMoreScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSection('Academic', _items.academic, context, ref),
+            const SizedBox(height: 24),
+            _buildSection('Reports', _items.reports, context, ref),
             const SizedBox(height: 24),
             _buildSection('Communication', _items.communication, context, ref),
             const SizedBox(height: 24),

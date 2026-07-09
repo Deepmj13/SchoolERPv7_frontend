@@ -12,4 +12,5 @@ class RouteNames {
   static const String teacherNotices = 'teacherNotices';
   static const String teacherRemarks = 'teacherRemarks';
   static const String teacherProfile = 'teacherProfile';
+  static const String teacherHolidays = 'teacherHolidays';
 }

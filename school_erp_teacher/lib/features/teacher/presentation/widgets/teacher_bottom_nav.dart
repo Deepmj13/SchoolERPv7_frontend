@@ -53,6 +53,14 @@ void showMoreMenu(BuildContext context) {
             },
           ),
           _MoreItem(
+            icon: Icons.event_rounded,
+            label: 'Holidays',
+            onTap: () {
+              Navigator.pop(ctx);
+              context.go('/teacher/holidays');
+            },
+          ),
+          _MoreItem(
             icon: Icons.campaign_rounded,
             label: 'Announcements',
             onTap: () {

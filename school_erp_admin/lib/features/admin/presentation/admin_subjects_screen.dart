@@ -15,17 +15,49 @@ final subjectsProvider = FutureProvider<List<Subject>>((ref) {
   return ref.watch(adminRepositoryProvider).getSubjects().timeout(const Duration(seconds: 15));
 });
 
-class AdminSubjectsScreen extends ConsumerWidget {
+final subjectsByClassProvider = FutureProvider<List<ClassSubjects>>((ref) {
+  return ref.watch(adminRepositoryProvider).getSubjectsByClass().timeout(const Duration(seconds: 15));
+});
+
+class AdminSubjectsScreen extends ConsumerStatefulWidget {
   const AdminSubjectsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminSubjectsScreen> createState() => _AdminSubjectsScreenState();
+}
+
+class _AdminSubjectsScreenState extends ConsumerState<AdminSubjectsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final subjectsAsync = ref.watch(subjectsProvider);
+    final subjectsByClassAsync = ref.watch(subjectsByClassProvider);
     final isMobile = context.isMobile;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Subjects'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'All Subjects'),
+            Tab(text: 'Class Wise'),
+          ],
+        ),
         actions: isMobile
             ? null
             : [
@@ -37,15 +69,30 @@ class AdminSubjectsScreen extends ConsumerWidget {
                 const SizedBox(width: 16),
               ],
       ),
-      body: subjectsAsync.when(
-        loading: () => const ListSkeletonLoader(),
-        error: (e, _) => ErrorRetryWidget(
-          message: e.toString(),
-          onRetry: () => ref.invalidate(subjectsProvider),
-        ),
-        data: (subjects) => isMobile
-            ? _buildMobile(context, ref, subjects)
-            : _buildDesktop(context, ref, subjects),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          subjectsAsync.when(
+            loading: () => const ListSkeletonLoader(),
+            error: (e, _) => ErrorRetryWidget(
+              message: e.toString(),
+              onRetry: () => ref.invalidate(subjectsProvider),
+            ),
+            data: (subjects) => isMobile
+                ? _buildMobile(context, ref, subjects)
+                : _buildDesktop(context, ref, subjects),
+          ),
+          subjectsByClassAsync.when(
+            loading: () => const ListSkeletonLoader(),
+            error: (e, _) => ErrorRetryWidget(
+              message: e.toString(),
+              onRetry: () => ref.invalidate(subjectsByClassProvider),
+            ),
+            data: (classes) => isMobile
+                ? _buildClassWiseMobile(context, ref, classes)
+                : _buildClassWiseDesktop(context, classes),
+          ),
+        ],
       ),
       floatingActionButton: isMobile
           ? FloatingActionButton(
@@ -135,6 +182,140 @@ class AdminSubjectsScreen extends ConsumerWidget {
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  Widget _buildClassWiseDesktop(
+      BuildContext context, List<ClassSubjects> classes) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: DataTableWidget<ClassSubjects>(
+        searchHint: 'Search classes...',
+        items: classes,
+        emptyMessage: 'No class-subject assignments found',
+        columns: [
+          ColumnDefinition<ClassSubjects>(
+            header: 'Class',
+            sortable: true,
+            displayValue: (c) => c.className,
+          ),
+          ColumnDefinition<ClassSubjects>(
+            header: 'Section',
+            displayValue: (c) => c.section,
+          ),
+          ColumnDefinition<ClassSubjects>(
+            header: 'Subjects',
+            displayValue: (c) => '${c.subjects.length} subject${c.subjects.length == 1 ? '' : 's'}',
+          ),
+          ColumnDefinition<ClassSubjects>(
+            header: 'Subject Names',
+            displayValue: (c) => c.subjects.map((s) => s.name).join(', '),
+          ),
+        ],
+        actionsBuilder: (_) => const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _buildClassWiseMobile(
+      BuildContext context, WidgetRef ref, List<ClassSubjects> classes) {
+    return RefreshIndicator(
+      onRefresh: () => ref.refresh(subjectsByClassProvider.future),
+      child: classes.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.4,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.book_outlined, size: 64,
+                            color: Colors.grey.withValues(alpha: 0.3)),
+                        const SizedBox(height: 16),
+                        Text('No class-subject assignments found',
+                            style: Theme.of(context).textTheme.bodyMedium),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 80),
+              itemCount: classes.length,
+              itemBuilder: (context, index) {
+                final classSubjects = classes[index];
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.class_rounded,
+                                  color: AppColors.primary, size: 22),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    classSubjects.displayName,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${classSubjects.subjects.length} subject${classSubjects.subjects.length == 1 ? '' : 's'}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (classSubjects.subjects.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          const Divider(height: 1),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: classSubjects.subjects.map((s) =>
+                              Chip(
+                                label: Text(s.name, style: const TextStyle(fontSize: 13)),
+                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ).toList(),
+                          ),
+                        ],
                       ],
                     ),
                   ),

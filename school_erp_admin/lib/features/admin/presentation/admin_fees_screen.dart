@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:excel/excel.dart' hide Border;
 import 'package:path_provider/path_provider.dart';
@@ -16,8 +17,9 @@ import 'package:school_erp_admin/features/admin/presentation/providers/admin_rep
 class UnpaidFilterState {
   final String? classId;
   final String paymentFilter;
+  final String searchQuery;
 
-  const UnpaidFilterState({this.classId, this.paymentFilter = 'all'});
+  const UnpaidFilterState({this.classId, this.paymentFilter = 'all', this.searchQuery = ''});
 }
 
 final unpaidFilterProvider = StateProvider.autoDispose<UnpaidFilterState>((ref) => const UnpaidFilterState());
@@ -39,6 +41,7 @@ final unpaidFeesProvider = FutureProvider.autoDispose<List<UnpaidFeeItem>>((ref)
   return ref.watch(adminRepositoryProvider).getUnpaidFees(
     classId: filter.classId,
     paymentFilter: filter.paymentFilter,
+    search: filter.searchQuery.isEmpty ? null : filter.searchQuery,
   ).timeout(const Duration(seconds: 15));
 });
 
@@ -52,15 +55,31 @@ class AdminFeesScreen extends ConsumerStatefulWidget {
 class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
+  final _searchCtrl = TextEditingController();
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 2, vsync: this);
+    _searchCtrl.addListener(() {
+      _searchDebounce?.cancel();
+      _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        final current = ref.read(unpaidFilterProvider);
+        ref.read(unpaidFilterProvider.notifier).state = UnpaidFilterState(
+          classId: current.classId,
+          paymentFilter: current.paymentFilter,
+          searchQuery: _searchCtrl.text.trim(),
+        );
+      });
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _searchCtrl.dispose();
     _tabCtrl.dispose();
     super.dispose();
   }
@@ -357,6 +376,29 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
     );
   }
 
+  Widget _searchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
+      child: TextField(
+        controller: _searchCtrl,
+        decoration: InputDecoration(
+          hintText: 'Search by name, roll no, parent...',
+          prefixIcon: const Icon(Icons.search),
+          isDense: true,
+          suffixIcon: _searchCtrl.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, size: 18),
+                  onPressed: () {
+                    _searchCtrl.clear();
+                    ref.read(unpaidFilterProvider.notifier).state = const UnpaidFilterState();
+                  },
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+
   Widget _pendingTab(bool isMobile) {
     final feesAsync = ref.watch(unpaidFeesProvider);
     final filter = ref.watch(unpaidFilterProvider);
@@ -365,6 +407,7 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
     return Scaffold(
       body: Column(
         children: [
+          _searchBar(),
           _unpaidFilterBar(isMobile, feesAsync, classesAsync, filter),
           Expanded(
             child: feesAsync.when(

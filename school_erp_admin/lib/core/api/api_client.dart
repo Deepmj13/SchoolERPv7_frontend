@@ -255,6 +255,42 @@ class ApiClient {
     }
   }
 
+  Future<List<int>> download(String path,
+      {Map<String, String>? queryParams, Duration? timeout}) async {
+    timeout ??= const Duration(seconds: 60);
+    try {
+      final uri = Uri.parse('${Endpoints.baseUrl}$path')
+          .replace(queryParameters: queryParams);
+      final headers = await _headers();
+      headers.remove('Content-Type');
+      final response = await _client
+          .get(uri, headers: headers)
+          .timeout(timeout);
+      if (response.statusCode == 401) {
+        final refreshed = await _tryRefreshToken();
+        if (refreshed) {
+          final newHeaders = await _headers();
+          newHeaders.remove('Content-Type');
+          final retry = await _client
+              .get(uri, headers: newHeaders)
+              .timeout(timeout);
+          if (retry.statusCode == 200) return retry.bodyBytes.toList();
+        }
+        await _storage.clear();
+        onUnauthorized?.call();
+        throw ApiException(401, 'Session expired. Please login again.');
+      }
+      if (response.statusCode != 200) {
+        throw ApiException(response.statusCode, 'Download failed');
+      }
+      return response.bodyBytes.toList();
+    } on TimeoutException {
+      throw ApiException(0, 'Download timed out');
+    } on SocketException {
+      throw ApiException(0, 'No internet connection');
+    }
+  }
+
   void dispose() {
     _client.close();
   }
