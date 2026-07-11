@@ -128,6 +128,9 @@ class TimetableEntry {
   final String startTime;
   final String endTime;
   final String? room;
+  final String? proxyTeacherId;
+  final String? originalTeacherId;
+  final bool hasProxy;
 
   TimetableEntry({
     required this.id,
@@ -137,6 +140,9 @@ class TimetableEntry {
     required this.startTime,
     required this.endTime,
     this.room,
+    this.proxyTeacherId,
+    this.originalTeacherId,
+    this.hasProxy = false,
   });
 
   factory TimetableEntry.fromJson(Map<String, dynamic> json) =>
@@ -148,6 +154,9 @@ class TimetableEntry {
         startTime: json['start_time'] as String,
         endTime: json['end_time'] as String,
         room: json['room'] as String?,
+        proxyTeacherId: json['proxy_teacher_id'] as String?,
+        originalTeacherId: json['original_teacher_id'] as String?,
+        hasProxy: json['has_proxy'] as bool? ?? false,
       );
 }
 

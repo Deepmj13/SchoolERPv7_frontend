@@ -612,9 +612,13 @@ class AdminRepository {
     }
   }
 
-  Future<List<TimetableEntry>> getTeacherTimetable(String teacherId) async {
+  Future<List<TimetableEntry>> getTeacherTimetable(String teacherId,
+      {String? date}) async {
     try {
-      final data = await _api.get(Endpoints.teacherTimetable(teacherId));
+      final data = await _api.get(
+        Endpoints.teacherTimetable(teacherId),
+        queryParams: date != null ? {'date': date} : null,
+      );
       return (data as List).map((e) => TimetableEntry.fromJson(e)).toList();
     } on ApiException {
       rethrow;
@@ -623,9 +627,13 @@ class AdminRepository {
     }
   }
 
-  Future<List<TimetableEntry>> getClassTimetable(String classId) async {
+  Future<List<TimetableEntry>> getClassTimetable(String classId,
+      {String? date}) async {
     try {
-      final data = await _api.get(Endpoints.classTimetable(classId));
+      final data = await _api.get(
+        Endpoints.classTimetable(classId),
+        queryParams: date != null ? {'date': date} : null,
+      );
       return (data as List).map((e) => TimetableEntry.fromJson(e)).toList();
     } on ApiException {
       rethrow;
@@ -858,6 +866,62 @@ class AdminRepository {
       rethrow;
     } catch (e) {
       throw ApiException(0, 'Failed to download report: $e');
+    }
+  }
+
+  Future<List<ProxyAssignment>> getAdminProxies(String? date) async {
+    try {
+      final data = await _api.get(
+        Endpoints.proxyAdminAll,
+        queryParams: date != null ? {'date': date} : null,
+      );
+      return (data as List)
+          .map((e) => ProxyAssignment.fromJson(e))
+          .toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to parse proxy assignments: $e');
+    }
+  }
+
+  Future<ProxyAssignment> assignProxy(
+      String timetableId, String proxyTeacherId, String? reason) async {
+    try {
+      final data = await _api.post(Endpoints.proxyAssign, body: {
+        'timetable_id': timetableId,
+        'proxy_teacher_id': proxyTeacherId,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      });
+      return ProxyAssignment.fromJson(data as Map<String, dynamic>);
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to assign proxy: $e');
+    }
+  }
+
+  Future<void> cancelProxy(String proxyId) async {
+    try {
+      await _api.delete(Endpoints.proxyCancel(proxyId));
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to cancel proxy: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getAvailableTeachers(
+      String timetableId) async {
+    try {
+      final data = await _api.get(Endpoints.proxyAvailable(timetableId));
+      return (data as List)
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load available teachers: $e');
     }
   }
 }

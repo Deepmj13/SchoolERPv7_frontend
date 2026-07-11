@@ -233,10 +233,10 @@ class ApiClient {
 
       final uri = Uri.parse('${Endpoints.baseUrl}${Endpoints.refresh}');
       final response = await _client
-          .post(uri, headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          })
+          .post(uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'token': token}),
+          )
           .timeout(_refreshTimeout);
 
       if (response.statusCode == 200 && response.body.isNotEmpty) {

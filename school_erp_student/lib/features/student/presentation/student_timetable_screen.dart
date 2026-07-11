@@ -273,6 +273,24 @@ class _StudentTimetableScreenState
               ],
             ),
           ),
+          if (entry.hasProxy) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'PROXY',
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.orange,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+          ],
           if (entry.teacherName != null)
             Flexible(
               child: Text(

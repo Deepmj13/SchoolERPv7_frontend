@@ -73,15 +73,23 @@ class TeacherRepository {
     });
   }
 
-  Future<List<TimetableEntry>> getTeacherTimetable(String teacherId) async {
-    final data = await _api.get(Endpoints.teacherTimetable(teacherId));
+  Future<List<TimetableEntry>> getTeacherTimetable(String teacherId,
+      {String? date}) async {
+    final data = await _api.get(
+      Endpoints.teacherTimetable(teacherId),
+      queryParams: date != null ? {'date': date} : null,
+    );
     return (data as List)
         .map((e) => TimetableEntry.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
-  Future<List<TimetableEntry>> getClassTimetable(String classId) async {
-    final data = await _api.get(Endpoints.classTimetable(classId));
+  Future<List<TimetableEntry>> getClassTimetable(String classId,
+      {String? date}) async {
+    final data = await _api.get(
+      Endpoints.classTimetable(classId),
+      queryParams: date != null ? {'date': date} : null,
+    );
     return (data as List)
         .map((e) => TimetableEntry.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -219,12 +227,53 @@ class TeacherRepository {
   }
 
   Future<List<Holiday>> getHolidays() async {
-    final data = await _api.get(Endpoints.holidays);
-    if (data is List) {
-      return data
-          .map((e) => Holiday.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
+    final raw = await _api.get(Endpoints.holidays);
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list.map((e) => Holiday.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<List<ProxyAssignment>> getMyProxies() async {
+    final data = await _api.get(Endpoints.proxyMy);
+    return (data as List)
+        .map((e) => ProxyAssignment.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<ProxyAssignment>> getPendingProxies() async {
+    final data = await _api.get(Endpoints.proxyPending);
+    return (data as List)
+        .map((e) => ProxyAssignment.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<ProxyAssignment> assignProxy(
+      String timetableId, String proxyTeacherId, String? reason) async {
+    final data = await _api.post(Endpoints.proxyAssign, body: {
+      'timetable_id': timetableId,
+      'proxy_teacher_id': proxyTeacherId,
+      if (reason != null && reason.isNotEmpty) 'reason': reason,
+    });
+    return ProxyAssignment.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<ProxyAssignment> respondToProxy(
+      String proxyId, String status) async {
+    final data = await _api.patch(
+      Endpoints.proxyRespond(proxyId),
+      body: {'status': status},
+    );
+    return ProxyAssignment.fromJson(data as Map<String, dynamic>);
+  }
+
+  Future<void> cancelProxy(String proxyId) async {
+    await _api.delete(Endpoints.proxyCancel(proxyId));
+  }
+
+  Future<List<Map<String, dynamic>>> getAvailableTeachers(
+      String timetableId) async {
+    final data = await _api.get(Endpoints.proxyAvailable(timetableId));
+    return (data as List)
+        .map((e) => e as Map<String, dynamic>)
+        .toList();
   }
 }

@@ -9,7 +9,10 @@ final timetableEntriesProvider = FutureProvider<List<TimetableEntry>>((ref) {
   final classId = selectedClass?.id;
   if (classId == null) return Future.value([]);
   final repo = ref.watch(adminRepositoryProvider);
-  return repo.getClassTimetable(classId).timeout(const Duration(seconds: 15));
+  final now = DateTime.now();
+  final todayStr =
+      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+  return repo.getClassTimetable(classId, date: todayStr).timeout(const Duration(seconds: 15));
 });
 
 class TimetableController extends StateNotifier<AsyncValue<void>> {

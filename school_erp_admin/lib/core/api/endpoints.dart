@@ -48,6 +48,15 @@ class Endpoints {
   static const String timetable = '$apiPrefix/timetable';
   static String timetableEntry(String id) => '$apiPrefix/timetable/$id';
 
+  static const String proxyAssign = '$apiPrefix/proxy/assign';
+  static String proxyRespond(String id) => '$apiPrefix/proxy/$id/respond';
+  static String proxyCancel(String id) => '$apiPrefix/proxy/$id';
+  static String proxyTodayForClass(String classId) =>
+      '$apiPrefix/proxy/today?classId=$classId';
+  static String proxyAvailable(String timetableId) =>
+      '$apiPrefix/proxy/available?timetableId=$timetableId';
+  static const String proxyAdminAll = '$apiPrefix/proxy/admin/all';
+
   static const String feeStructures = '$apiPrefix/fees/structures';
   static const String feesPending = '$apiPrefix/fees/pending';
   static const String feesPayments = '$apiPrefix/fees/payments';

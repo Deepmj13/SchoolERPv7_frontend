@@ -53,8 +53,11 @@ class StudentRepository {
         .toList();
   }
 
-  Future<List<TimetableEntry>> getTimetable(String classId) async {
-    final data = await _api.get(Endpoints.classTimetable(classId));
+  Future<List<TimetableEntry>> getTimetable(String classId, {String? date}) async {
+    final data = await _api.get(
+      Endpoints.classTimetable(classId),
+      queryParams: date != null ? {'date': date} : null,
+    );
     if (data is List) {
       return data
           .map((e) => TimetableEntry.fromJson(e as Map<String, dynamic>))
@@ -78,12 +81,8 @@ class StudentRepository {
   }
 
   Future<List<Holiday>> getHolidays() async {
-    final data = await _api.get(Endpoints.holidays);
-    if (data is List) {
-      return data
-          .map((e) => Holiday.fromJson(e as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
+    final raw = await _api.get(Endpoints.holidays);
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list.map((e) => Holiday.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

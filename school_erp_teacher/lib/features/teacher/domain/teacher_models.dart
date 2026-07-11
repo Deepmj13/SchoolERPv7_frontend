@@ -203,6 +203,9 @@ class TimetableEntry {
   final String? room;
   final String? className;
   final String? classSection;
+  final String? proxyTeacherId;
+  final String? originalTeacherId;
+  final bool hasProxy;
 
   TimetableEntry({
     required this.id,
@@ -216,6 +219,9 @@ class TimetableEntry {
     this.room,
     this.className,
     this.classSection,
+    this.proxyTeacherId,
+    this.originalTeacherId,
+    this.hasProxy = false,
   });
 
   factory TimetableEntry.fromJson(Map<String, dynamic> json) =>
@@ -231,6 +237,9 @@ class TimetableEntry {
         room: json['room'] as String?,
         className: json['class_name'] as String?,
         classSection: json['class_section'] as String?,
+        proxyTeacherId: json['proxy_teacher_id'] as String?,
+        originalTeacherId: json['original_teacher_id'] as String?,
+        hasProxy: json['has_proxy'] as bool? ?? false,
       );
 
   String get classDisplay => className != null ? '$className${classSection != null && classSection!.isNotEmpty ? ' - $classSection' : ''}' : '';
@@ -453,4 +462,98 @@ class Holiday {
 
   bool get isHoliday => type == 'holiday';
   String get displayType => isHoliday ? 'Holiday' : 'Event';
+}
+
+class ProxyAssignment {
+  final String id;
+  final String timetableId;
+  final String date;
+  final String originalTeacherId;
+  final String originalTeacherName;
+  final String proxyTeacherId;
+  final String proxyTeacherName;
+  final String requestedBy;
+  final String? requestedByEmail;
+  final String status;
+  final String? reason;
+  final String? subjectId;
+  final String? subjectName;
+  final String? day;
+  final String? startTime;
+  final String? endTime;
+  final String? room;
+  final String? className;
+  final String? classSection;
+
+  ProxyAssignment({
+    required this.id,
+    required this.timetableId,
+    required this.date,
+    required this.originalTeacherId,
+    required this.originalTeacherName,
+    required this.proxyTeacherId,
+    required this.proxyTeacherName,
+    required this.requestedBy,
+    this.requestedByEmail,
+    required this.status,
+    this.reason,
+    this.subjectId,
+    this.subjectName,
+    this.day,
+    this.startTime,
+    this.endTime,
+    this.room,
+    this.className,
+    this.classSection,
+  });
+
+  factory ProxyAssignment.fromJson(Map<String, dynamic> json) =>
+      ProxyAssignment(
+        id: json['id'] as String,
+        timetableId: json['timetable_id'] as String,
+        date: json['date'] as String,
+        originalTeacherId: json['original_teacher_id'] as String,
+        originalTeacherName: json['original_teacher_name'] as String? ?? '',
+        proxyTeacherId: json['proxy_teacher_id'] as String,
+        proxyTeacherName: json['proxy_teacher_name'] as String? ?? '',
+        requestedBy: json['requested_by'] as String,
+        requestedByEmail: json['requested_by_email'] as String?,
+        status: json['status'] as String? ?? 'pending',
+        reason: json['reason'] as String?,
+        subjectId: json['subject_id'] as String?,
+        subjectName: json['subject_name'] as String?,
+        day: json['day'] as String?,
+        startTime: json['start_time'] as String?,
+        endTime: json['end_time'] as String?,
+        room: json['room'] as String?,
+        className: json['class_name'] as String?,
+        classSection: json['class_section'] as String?,
+      );
+
+  String get classDisplay {
+    if (className == null) return '';
+    return classSection != null && classSection!.isNotEmpty
+        ? '$className - $classSection'
+        : className!;
+  }
+
+  String get statusLabel {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'accepted':
+        return 'Accepted';
+      case 'rejected':
+        return 'Rejected';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  }
+
+  bool get isPending => status == 'pending';
+  bool get isAccepted => status == 'accepted';
+  bool get isRejected => status == 'rejected';
+  bool get isCancelled => status == 'cancelled';
 }

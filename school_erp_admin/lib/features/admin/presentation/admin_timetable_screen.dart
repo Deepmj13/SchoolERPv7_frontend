@@ -231,6 +231,9 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                                   final span = nextSlot != null ? _calcSpan(e, slot, nextSlot, slots) : 1;
                                   return GestureDetector(
                                     onTap: () => _showEntryForm(e),
+                                    onLongPress: _isTodayEntry(e)
+                                        ? () => _showAssignProxySheet(e)
+                                        : null,
                                     child: Container(
                                       height: rowH * span - 4,
                                       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
@@ -240,19 +243,37 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border(left: BorderSide(color: color, width: 3)),
                                       ),
-                                      child: Column(
+                                        child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Text(
-                                            e.subjectName ?? '',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: color,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  e.subjectName ?? '',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: color,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                              if (e.hasProxy && _isToday(e.day))
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.warning.withValues(alpha: 0.15),
+                                                    borderRadius: BorderRadius.circular(4),
+                                                  ),
+                                                  child: const Text(
+                                                    'PROXY',
+                                                    style: TextStyle(fontSize: 7, fontWeight: FontWeight.w700, color: AppColors.warning),
+                                                  ),
+                                                ),
+                                            ],
                                           ),
                                           if (showRoom && e.room != null && e.room!.isNotEmpty)
                                             Text(
@@ -322,34 +343,57 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                 child: Card(
                   margin: const EdgeInsets.only(bottom: 4),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    dense: true,
-                    leading: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10),
+                  child: GestureDetector(
+                    onLongPress: _isTodayEntry(e)
+                        ? () => _showAssignProxySheet(e)
+                        : null,
+                    child: ListTile(
+                      dense: true,
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(Icons.book_rounded, color: color, size: 18),
                       ),
-                      child: Icon(Icons.book_rounded, color: color, size: 18),
-                    ),
-                    title: Text(e.subjectName ?? '', style: const TextStyle(fontWeight: FontWeight.w500)),
-                    subtitle: Text(
-                      '${e.startTime} - ${e.endTime}${showRoom && e.room != null && e.room!.isNotEmpty ? '  Room: ${e.room}' : ''}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (action) {
-                        if (action == 'edit') {
-                          _showEntryForm(e);
-                        } else if (action == 'delete') {
-                          _confirmDelete(e);
-                        }
-                      },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(e.subjectName ?? '', style: const TextStyle(fontWeight: FontWeight.w500)),
+                          ),
+                          if (e.hasProxy && _isToday(e.day))
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.warning.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'PROXY',
+                                style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.warning),
+                              ),
+                            ),
+                        ],
+                      ),
+                      subtitle: Text(
+                        '${e.startTime} - ${e.endTime}${showRoom && e.room != null && e.room!.isNotEmpty ? '  Room: ${e.room}' : ''}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (action) {
+                          if (action == 'edit') {
+                            _showEntryForm(e);
+                          } else if (action == 'delete') {
+                            _confirmDelete(e);
+                          }
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -581,6 +625,187 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
         ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Failed to save entry'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating));
       }
     }
+  }
+
+  bool _isToday(String day) {
+    final now = DateTime.now();
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    final todayDay = days[now.weekday - 1];
+    return day == todayDay;
+  }
+
+  bool _isTodayEntry(TimetableEntry entry) {
+    return _isToday(entry.day) && !entry.hasProxy;
+  }
+
+  void _showAssignProxySheet(TimetableEntry entry) {
+    final repo = ref.read(adminRepositoryProvider);
+    String? selectedTeacherId;
+    final reasonCtrl = TextEditingController();
+    bool saving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheetState) => Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Assign Proxy',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${entry.subjectName ?? "Lecture"} - ${entry.classDisplay}',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${entry.startTime} - ${entry.endTime}',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                ),
+                const SizedBox(height: 20),
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: repo.getAvailableTeachers(entry.id),
+                  builder: (ctx, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                      );
+                    }
+                    if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          snapshot.hasError
+                              ? 'Failed to load teachers'
+                              : 'No available teachers for this slot',
+                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      );
+                    }
+                    final teachers = snapshot.data!;
+                    return DropdownButtonFormField<String>(
+                      value: selectedTeacherId,
+                      decoration: const InputDecoration(
+                        labelText: 'Proxy Teacher *',
+                        prefixIcon: Icon(Icons.person),
+                      ),
+                      items: teachers
+                          .map((t) => DropdownMenuItem(
+                                value: t['id'] as String,
+                                child: Text(t['full_name'] as String),
+                              ))
+                          .toList(),
+                      onChanged: (v) {
+                        if (v != null) setSheetState(() => selectedTeacherId = v);
+                      },
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reasonCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Reason (optional)',
+                    prefixIcon: Icon(Icons.message),
+                    hintText: 'e.g. Teacher leave',
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: (selectedTeacherId != null && !saving)
+                        ? () async {
+                            setSheetState(() => saving = true);
+                            try {
+                              await repo.assignProxy(
+                                entry.id,
+                                selectedTeacherId!,
+                                reasonCtrl.text.isNotEmpty
+                                    ? reasonCtrl.text
+                                    : null,
+                              );
+                              ref.invalidate(timetableEntriesProvider);
+                              if (ctx.mounted) Navigator.pop(ctx);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Proxy assigned successfully'),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setSheetState(() => saving = false);
+                              if (ctx.mounted) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Failed: $e'),
+                                    backgroundColor: AppColors.error,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        : null,
+                    child: saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Assign Proxy'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<bool> _confirmDelete(TimetableEntry entry) async {

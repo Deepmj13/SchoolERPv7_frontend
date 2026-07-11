@@ -26,7 +26,10 @@ final studentTimetableProvider =
   if (classId == null) return [];
 
   try {
-    final entries = await repo.getTimetable(classId);
+    final now = DateTime.now();
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final entries = await repo.getTimetable(classId, date: todayStr);
     return entries;
   } catch (e) {
     AppLogger.api.warning('studentTimetableProvider: timetable fetch failed: $e');
