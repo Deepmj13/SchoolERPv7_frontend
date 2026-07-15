@@ -7,7 +7,7 @@ import 'package:school_erp_admin/features/admin/presentation/widgets/data_table_
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
 final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
-  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
 final attendanceRecordsProvider =
@@ -17,7 +17,7 @@ final attendanceRecordsProvider =
   return ref
       .watch(adminRepositoryProvider)
       .getAttendance(classId, date)
-      .timeout(const Duration(seconds: 15));
+      .timeout(const Duration(seconds: 30));
 });
 
 final _attendanceDateProvider = StateProvider<String?>((ref) => null);

@@ -11,7 +11,7 @@ import 'package:school_erp_admin/features/admin/presentation/widgets/stats_panel
 
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) {
   final future = ref.watch(adminRepositoryProvider).getDashboardStats();
-  return future.timeout(const Duration(seconds: 15));
+  return future.timeout(const Duration(seconds: 90));
 });
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {

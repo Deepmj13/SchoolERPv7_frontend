@@ -73,7 +73,7 @@ const _reportTypes = [
 ];
 
 final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
-  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
 final reportDataProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, endpoint) {

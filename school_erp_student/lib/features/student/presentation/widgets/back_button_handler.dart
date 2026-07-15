@@ -26,41 +26,42 @@ class _BackButtonHandlerState extends State<BackButtonHandler> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _canPop,
+      canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
           _canPop = false;
           return;
         }
+
         final now = DateTime.now();
-        if (_lastPress != null &&
-            now.difference(_lastPress!) < _kDoubleTapInterval) {
-          _lastPress = null;
-          if (widget.currentRoute == _homeRoute) {
+        final isDoubleTap = _lastPress != null &&
+            now.difference(_lastPress!) < _kDoubleTapInterval;
+
+        if (widget.currentRoute == _homeRoute) {
+          if (isDoubleTap) {
+            _lastPress = null;
             SystemNavigator.pop();
           } else {
-            context.go(_homeRoute);
+            _lastPress = now;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Press back again to exit'),
+                duration: Duration(milliseconds: 1500),
+              ),
+            );
           }
           return;
         }
+
         _lastPress = now;
-        if (widget.currentRoute == _homeRoute) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Press back again to exit'),
-              duration: Duration(milliseconds: 1500),
-            ),
-          );
-          return;
+        if (context.canPop()) {
+          setState(() => _canPop = true);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) context.pop();
+          });
+        } else {
+          context.go(_homeRoute);
         }
-        setState(() => _canPop = true);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.canPop()) {
-            context.pop();
-          } else {
-            context.go(_homeRoute);
-          }
-        });
       },
       child: widget.child,
     );

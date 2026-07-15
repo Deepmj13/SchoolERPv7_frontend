@@ -10,7 +10,7 @@ import 'package:school_erp_admin/features/admin/presentation/providers/admin_rep
 import 'package:school_erp_admin/features/admin/presentation/providers/timetable_provider.dart';
 
 final _classesProvider = FutureProvider<List<ClassModel>>((ref) {
-  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
 const _dayOrder = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];

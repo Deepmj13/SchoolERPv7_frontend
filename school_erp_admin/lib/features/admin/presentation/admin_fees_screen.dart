@@ -25,11 +25,11 @@ class UnpaidFilterState {
 final unpaidFilterProvider = StateProvider.autoDispose<UnpaidFilterState>((ref) => const UnpaidFilterState());
 
 final feePostsProvider = FutureProvider.autoDispose<List<FeePost>>((ref) {
-  return ref.watch(adminRepositoryProvider).getFeePosts().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getFeePosts().timeout(const Duration(seconds: 30));
 });
 
 final pendingFeesProvider = FutureProvider.autoDispose<List<FeePayment>>((ref) {
-  return ref.watch(adminRepositoryProvider).getPendingFees().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getPendingFees().timeout(const Duration(seconds: 30));
 });
 
 final _classesProvider = FutureProvider.autoDispose<List<ClassModel>>((ref) {
@@ -42,7 +42,7 @@ final unpaidFeesProvider = FutureProvider.autoDispose<List<UnpaidFeeItem>>((ref)
     classId: filter.classId,
     paymentFilter: filter.paymentFilter,
     search: filter.searchQuery.isEmpty ? null : filter.searchQuery,
-  ).timeout(const Duration(seconds: 15));
+  ).timeout(const Duration(seconds: 30));
 });
 
 class AdminFeesScreen extends ConsumerStatefulWidget {

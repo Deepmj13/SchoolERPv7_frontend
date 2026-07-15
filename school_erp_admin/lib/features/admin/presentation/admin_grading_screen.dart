@@ -11,7 +11,7 @@ import 'package:school_erp_admin/features/admin/presentation/widgets/admin_form_
 import 'package:school_erp_admin/features/admin/presentation/widgets/admin_form_sheet.dart';
 
 final gradingSystemsProvider = FutureProvider<List<GradingSystem>>((ref) {
-  return ref.watch(adminRepositoryProvider).getGradingSystems().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getGradingSystems().timeout(const Duration(seconds: 30));
 });
 
 class AdminGradingScreen extends ConsumerWidget {

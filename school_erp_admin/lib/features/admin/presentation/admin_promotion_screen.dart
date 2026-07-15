@@ -9,11 +9,11 @@ import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
 final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
-  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
 final classStudentsProvider = FutureProvider.family<List<Student>, String>((ref, classId) {
-  return ref.watch(adminRepositoryProvider).getClassStudents(classId).timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getClassStudents(classId).timeout(const Duration(seconds: 30));
 });
 
 class AdminPromotionScreen extends ConsumerStatefulWidget {

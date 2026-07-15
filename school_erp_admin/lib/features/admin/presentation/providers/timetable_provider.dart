@@ -12,7 +12,7 @@ final timetableEntriesProvider = FutureProvider<List<TimetableEntry>>((ref) {
   final now = DateTime.now();
   final todayStr =
       '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-  return repo.getClassTimetable(classId, date: todayStr).timeout(const Duration(seconds: 15));
+  return repo.getClassTimetable(classId, date: todayStr).timeout(const Duration(seconds: 30));
 });
 
 class TimetableController extends StateNotifier<AsyncValue<void>> {

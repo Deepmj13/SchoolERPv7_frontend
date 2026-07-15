@@ -269,6 +269,9 @@ class ClassModel {
     required this.studentCount,
   });
 
+  String get displayName =>
+      '$name${section.isNotEmpty ? ' - $section' : ''}';
+
   factory ClassModel.fromJson(Map<String, dynamic> json) {
     return ClassModel(
       id: json['id'] as String,
@@ -413,17 +416,40 @@ class AttendanceRecord {
   }
 }
 
+class ExamClass {
+  final String id;
+  final String name;
+  final String? section;
+
+  ExamClass({
+    required this.id,
+    required this.name,
+    this.section,
+  });
+
+  String get displayName =>
+      '$name${section != null && section!.isNotEmpty ? ' - $section' : ''}';
+
+  factory ExamClass.fromJson(Map<String, dynamic> json) => ExamClass(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        section: json['section'] as String?,
+      );
+}
+
 class Exam {
   final String id;
   final String name;
   final String? examDate;
   final bool isPublished;
+  final List<ExamClass> classes;
 
   Exam({
     required this.id,
     required this.name,
     this.examDate,
     this.isPublished = false,
+    this.classes = const [],
   });
 
   factory Exam.fromJson(Map<String, dynamic> json) => Exam(
@@ -431,6 +457,10 @@ class Exam {
         name: json['name'] as String,
         examDate: json['exam_date'] as String?,
         isPublished: json['is_published'] as bool? ?? false,
+        classes: (json['classes'] as List?)
+                ?.map((c) => ExamClass.fromJson(c as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
 }
 

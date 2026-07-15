@@ -43,6 +43,7 @@ class Endpoints {
 
   static const String exams = '$apiPrefix/exams';
   static String exam(String id) => '$apiPrefix/exams/$id';
+  static String examClasses(String examId) => '$apiPrefix/exams/$examId/classes';
   static String publishExam(String id) => '$apiPrefix/exams/$id/publish';
 
   static const String timetable = '$apiPrefix/timetable';

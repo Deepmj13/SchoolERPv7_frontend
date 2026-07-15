@@ -12,7 +12,7 @@ import 'package:school_erp_admin/features/admin/presentation/widgets/admin_form_
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
 final announcementsProvider = FutureProvider<List<Announcement>>((ref) {
-  return ref.watch(adminRepositoryProvider).getAnnouncements().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getAnnouncements().timeout(const Duration(seconds: 30));
 });
 
 class AdminAnnouncementsScreen extends ConsumerWidget {

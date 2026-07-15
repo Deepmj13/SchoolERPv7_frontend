@@ -9,19 +9,19 @@ import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
 final examDetailProvider = FutureProvider.family<Exam, String>((ref, examId) {
-  return ref.read(adminRepositoryProvider).getExam(examId).timeout(const Duration(seconds: 15));
+  return ref.read(adminRepositoryProvider).getExam(examId).timeout(const Duration(seconds: 30));
 });
 
 final examSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
-  return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 15));
+  return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 30));
 });
 
-final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
-  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 15));
+final classesForFilterProvider = FutureProvider.family<List<ExamClass>, String>((ref, examId) {
+  return ref.watch(adminRepositoryProvider).getExamClasses(examId).timeout(const Duration(seconds: 30));
 });
 
 final classStudentsProvider = FutureProvider.family<List<Student>, String>((ref, classId) {
-  return ref.read(adminRepositoryProvider).getClassStudents(classId).timeout(const Duration(seconds: 15));
+  return ref.read(adminRepositoryProvider).getClassStudents(classId).timeout(const Duration(seconds: 30));
 });
 
 class AdminMarkEntryScreen extends ConsumerStatefulWidget {
@@ -80,7 +80,7 @@ class _AdminMarkEntryScreenState extends ConsumerState<AdminMarkEntryScreen> {
   Widget build(BuildContext context) {
     final examAsync = ref.watch(examDetailProvider(widget.examId));
     final subjectsAsync = ref.watch(examSubjectsProvider(widget.examId));
-    final classesAsync = ref.watch(classesForFilterProvider);
+    final classesAsync = ref.watch(classesForFilterProvider(widget.examId));
     final isMobile = context.isMobile;
 
     return Scaffold(
@@ -137,8 +137,7 @@ class _AdminMarkEntryScreenState extends ConsumerState<AdminMarkEntryScreen> {
                     ),
                     items: classes
                         .map((c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text('${c.name}${c.section.isNotEmpty ? ' - ${c.section}' : ''}')))
+                            value: c.id, child: Text(c.displayName)))
                         .toList(),
                     onChanged: (id) => setState(() {
                       _selectedClassId = id;

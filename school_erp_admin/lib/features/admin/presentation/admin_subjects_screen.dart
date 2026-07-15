@@ -12,11 +12,11 @@ import 'package:school_erp_admin/features/admin/presentation/widgets/data_table_
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
 final subjectsProvider = FutureProvider<List<Subject>>((ref) {
-  return ref.watch(adminRepositoryProvider).getSubjects().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getSubjects().timeout(const Duration(seconds: 30));
 });
 
 final subjectsByClassProvider = FutureProvider<List<ClassSubjects>>((ref) {
-  return ref.watch(adminRepositoryProvider).getSubjectsByClass().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getSubjectsByClass().timeout(const Duration(seconds: 30));
 });
 
 class AdminSubjectsScreen extends ConsumerStatefulWidget {

@@ -233,15 +233,17 @@ class TeacherRepository {
   }
 
   Future<List<ProxyAssignment>> getMyProxies() async {
-    final data = await _api.get(Endpoints.proxyMy);
-    return (data as List)
+    final raw = await _api.get(Endpoints.proxyMy);
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list
         .map((e) => ProxyAssignment.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   Future<List<ProxyAssignment>> getPendingProxies() async {
-    final data = await _api.get(Endpoints.proxyPending);
-    return (data as List)
+    final raw = await _api.get(Endpoints.proxyPending);
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list
         .map((e) => ProxyAssignment.fromJson(e as Map<String, dynamic>))
         .toList();
   }
@@ -271,8 +273,9 @@ class TeacherRepository {
 
   Future<List<Map<String, dynamic>>> getAvailableTeachers(
       String timetableId) async {
-    final data = await _api.get(Endpoints.proxyAvailable(timetableId));
-    return (data as List)
+    final raw = await _api.get(Endpoints.proxyAvailable(timetableId));
+    final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+    return list
         .map((e) => e as Map<String, dynamic>)
         .toList();
   }

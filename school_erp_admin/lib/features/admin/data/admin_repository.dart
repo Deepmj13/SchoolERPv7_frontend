@@ -591,6 +591,18 @@ class AdminRepository {
     }
   }
 
+  Future<List<ExamClass>> getExamClasses(String examId) async {
+    try {
+      final raw = await _api.get(Endpoints.examClasses(examId));
+      final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+      return list.map((e) => ExamClass.fromJson(e as Map<String, dynamic>)).toList();
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load exam classes: $e');
+    }
+  }
+
   Future<ExamSubject> addExamSubject(String examId, Map<String, dynamic> body) async {
     try {
       final data = await _api.post(Endpoints.examSubjects(examId), body: body);
@@ -914,8 +926,9 @@ class AdminRepository {
   Future<List<Map<String, dynamic>>> getAvailableTeachers(
       String timetableId) async {
     try {
-      final data = await _api.get(Endpoints.proxyAvailable(timetableId));
-      return (data as List)
+      final raw = await _api.get(Endpoints.proxyAvailable(timetableId));
+      final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
+      return list
           .map((e) => e as Map<String, dynamic>)
           .toList();
     } on ApiException {

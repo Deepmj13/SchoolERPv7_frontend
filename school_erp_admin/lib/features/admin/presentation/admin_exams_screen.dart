@@ -11,11 +11,15 @@ import 'package:school_erp_admin/features/admin/presentation/widgets/data_table_
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
 final _allSubjectsProvider = FutureProvider<List<Subject>>((ref) {
-  return ref.watch(adminRepositoryProvider).getSubjects().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getSubjects().timeout(const Duration(seconds: 30));
+});
+
+final _allClassesProvider = FutureProvider<List<ClassModel>>((ref) {
+  return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
 final examsProvider = FutureProvider<List<Exam>>((ref) {
-  return ref.watch(adminRepositoryProvider).getExams().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getExams().timeout(const Duration(seconds: 30));
 });
 
 class AdminExamsScreen extends ConsumerWidget {
@@ -75,6 +79,26 @@ class AdminExamsScreen extends ConsumerWidget {
             sortable: true,
             displayValue: (e) => e.examDate ?? '-',
             width: 130,
+          ),
+          ColumnDefinition<Exam>(
+            header: 'Classes',
+            displayValue: (e) => e.classes.map((c) => c.displayName).join(', '),
+            displayWidget: (e) => e.classes.isEmpty
+                ? const Text('-', style: TextStyle(color: AppColors.textSecondary))
+                : Wrap(
+                    spacing: 4,
+                    runSpacing: 2,
+                    children: e.classes
+                        .map((c) => Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(c.displayName, style: const TextStyle(fontSize: 11)),
+                            ))
+                        .toList(),
+                  ),
           ),
           ColumnDefinition<Exam>(
             header: 'Status',
@@ -217,6 +241,25 @@ class AdminExamsScreen extends ConsumerWidget {
                               ?.copyWith(fontSize: 13),
                         ),
                       ],
+                      if (exam.classes.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: exam.classes
+                              .map((c) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.primary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(c.displayName,
+                                        style: const TextStyle(fontSize: 11)),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -269,6 +312,7 @@ class AdminExamsScreen extends ConsumerWidget {
   Future<void> _showAddSheet(BuildContext context, WidgetRef ref) async {
     final nameCtrl = TextEditingController();
     final dateCtrl = TextEditingController();
+    final selectedClassIds = <String>{};
     bool saving = false;
 
     final result = await showModalBottomSheet<bool>(
@@ -341,67 +385,64 @@ class AdminExamsScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                Text(
+                  'Assign Classes *',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                _buildClassSelector(ctx, ref, selectedClassIds, setSheetState),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: saving ? null : () => _submitExam(
+                          ctx, ref, nameCtrl, dateCtrl, selectedClassIds,
+                          publishNow: false,
+                          setSheetState: setSheetState,
+                          setState: () => saving = !saving,
+                        ),
+                        child: saving
+                            ? const SizedBox(
+                                width: 18, height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Save Draft'),
                       ),
                     ),
-                    onPressed: saving
-                        ? null
-                        : () async {
-                            if (nameCtrl.text.trim().isEmpty) {
-                              ScaffoldMessenger.of(ctx).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Please enter an exam name'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                              return;
-                            }
-                            setSheetState(() => saving = true);
-                            try {
-                              final body = <String, dynamic>{
-                                'name': nameCtrl.text.trim(),
-                              };
-                              final date = dateCtrl.text.trim();
-                              if (date.isNotEmpty) {
-                                body['exam_date'] = date;
-                              }
-                              await ref
-                                  .read(adminRepositoryProvider)
-                                  .createExam(body);
-                              ref.invalidate(examsProvider);
-                              if (ctx.mounted) Navigator.pop(ctx, true);
-                            } catch (e) {
-                              if (ctx.mounted) {
-                                setSheetState(() => saving = false);
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Failed: $e'),
-                                    backgroundColor: AppColors.error,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                    child: saving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Add Exam'),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: saving ? null : () => _submitExam(
+                          ctx, ref, nameCtrl, dateCtrl, selectedClassIds,
+                          publishNow: true,
+                          setSheetState: setSheetState,
+                          setState: () => saving = !saving,
+                        ),
+                        child: saving
+                            ? const SizedBox(
+                                width: 18, height: 18,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Text('Publish'),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
               ],
@@ -419,6 +460,115 @@ class AdminExamsScreen extends ConsumerWidget {
         ),
       );
     }
+  }
+
+  Future<void> _submitExam(
+    BuildContext ctx,
+    WidgetRef ref,
+    TextEditingController nameCtrl,
+    TextEditingController dateCtrl,
+    Set<String> selectedClassIds, {
+    required bool publishNow,
+    required StateSetter setSheetState,
+    required VoidCallback setState,
+  }) async {
+    if (nameCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an exam name'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (selectedClassIds.isEmpty) {
+      ScaffoldMessenger.of(ctx).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one class'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    setState();
+    setSheetState(() {});
+    try {
+      final body = <String, dynamic>{
+        'name': nameCtrl.text.trim(),
+        'class_ids': selectedClassIds.toList(),
+        'publish_now': publishNow,
+      };
+      final date = dateCtrl.text.trim();
+      if (date.isNotEmpty) body['exam_date'] = date;
+      await ref.read(adminRepositoryProvider).createExam(body);
+      ref.invalidate(examsProvider);
+      if (ctx.mounted) Navigator.pop(ctx, true);
+    } catch (e) {
+      if (ctx.mounted) {
+        setState();
+        setSheetState(() {});
+        ScaffoldMessenger.of(ctx).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildClassSelector(
+      BuildContext context, WidgetRef ref, Set<String> selectedIds, StateSetter setSheetState) {
+    final classesAsync = ref.watch(_allClassesProvider);
+    return classesAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
+      error: (e, _) => Text('Failed to load classes: $e', style: const TextStyle(fontSize: 12)),
+      data: (classes) {
+        if (classes.isEmpty) {
+          return const Text('No classes available', style: TextStyle(fontSize: 12, color: AppColors.textSecondary));
+        }
+        final allSelected = selectedIds.length == classes.length;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            FilterChip(
+              label: Text(allSelected ? 'Deselect All' : 'Select All', style: const TextStyle(fontSize: 13)),
+              selected: allSelected,
+              onSelected: (_) {
+                setSheetState(() {
+                  if (allSelected) {
+                    selectedIds.clear();
+                  } else {
+                    selectedIds.addAll(classes.map((c) => c.id));
+                  }
+                });
+              },
+            ),
+            ...classes.map((c) {
+              final isSelected = selectedIds.contains(c.id);
+              return FilterChip(
+                label: Text(c.displayName, style: const TextStyle(fontSize: 13)),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setSheetState(() {
+                    if (selected) {
+                      selectedIds.add(c.id);
+                    } else {
+                      selectedIds.remove(c.id);
+                    }
+                  });
+                },
+              );
+            }),
+          ],
+        );
+      },
+    );
   }
 
   Future<bool> _confirmDeleteMobile(
@@ -521,75 +671,135 @@ class AdminExamsScreen extends ConsumerWidget {
   void _showAddDialog(BuildContext context, WidgetRef ref) {
     final nameCtrl = TextEditingController();
     final dateCtrl = TextEditingController();
+    final selectedClassIds = <String>{};
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Exam'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: const InputDecoration(labelText: 'Exam Name'),
-                autofocus: true,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: dateCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Date (YYYY-MM-DD)',
-                  hintText: 'e.g. 2024-12-15',
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Add Exam'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: 'Exam Name'),
+                  autofocus: true,
                 ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: dateCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Date (YYYY-MM-DD)',
+                    hintText: 'e.g. 2024-12-15',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('Assign Classes *',
+                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                _buildClassSelector(ctx, ref, selectedClassIds, setDialogState),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            OutlinedButton(
+              onPressed: () => _submitExamDialog(
+                context, ref, nameCtrl, dateCtrl, selectedClassIds,
+                publishNow: false,
               ),
-            ],
-          ),
+              child: const Text('Save Draft'),
+            ),
+            CustomButton(
+              label: 'Publish',
+              onPressed: () => _submitExamDialog(
+                context, ref, nameCtrl, dateCtrl, selectedClassIds,
+                publishNow: true,
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          CustomButton(
-            label: 'Add',
-            onPressed: () async {
-              final name = nameCtrl.text.trim();
-              if (name.isEmpty) return;
-              final body = <String, dynamic>{'name': name};
-              final date = dateCtrl.text.trim();
-              if (date.isNotEmpty) body['exam_date'] = date;
-              try {
-                await ref.read(adminRepositoryProvider).createExam(body);
-                ref.invalidate(examsProvider);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Exam added successfully'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed: $e'),
-                      backgroundColor: AppColors.error,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-        ],
       ),
     );
   }
 
+  Future<void> _submitExamDialog(
+    BuildContext context,
+    WidgetRef ref,
+    TextEditingController nameCtrl,
+    TextEditingController dateCtrl,
+    Set<String> selectedClassIds, {
+    required bool publishNow,
+  }) async {
+    final name = nameCtrl.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter an exam name'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    if (selectedClassIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select at least one class'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    final body = <String, dynamic>{
+      'name': name,
+      'class_ids': selectedClassIds.toList(),
+      'publish_now': publishNow,
+    };
+    final date = dateCtrl.text.trim();
+    if (date.isNotEmpty) body['exam_date'] = date;
+    try {
+      await ref.read(adminRepositoryProvider).createExam(body);
+      ref.invalidate(examsProvider);
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(publishNow ? 'Exam published successfully' : 'Exam saved as draft'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: $e'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _togglePublish(
       BuildContext context, WidgetRef ref, Exam exam) async {
+    if (!exam.isPublished && exam.classes.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Assign classes before publishing'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
     try {
       await ref
           .read(adminRepositoryProvider)
@@ -741,5 +951,5 @@ class AdminExamsScreen extends ConsumerWidget {
 }
 
 final examSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
-  return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 15));
+  return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 30));
 });

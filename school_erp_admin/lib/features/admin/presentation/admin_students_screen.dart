@@ -12,7 +12,7 @@ import 'package:school_erp_admin/features/admin/presentation/providers/admin_rep
 import 'package:school_erp_admin/features/admin/presentation/student_detail_screen.dart';
 
 final studentsProvider = FutureProvider<List<Student>>((ref) {
-  return ref.watch(adminRepositoryProvider).getStudents().timeout(const Duration(seconds: 15));
+  return ref.watch(adminRepositoryProvider).getStudents().timeout(const Duration(seconds: 30));
 });
 
 class AdminStudentsScreen extends ConsumerWidget {
