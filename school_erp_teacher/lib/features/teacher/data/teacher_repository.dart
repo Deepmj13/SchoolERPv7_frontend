@@ -249,11 +249,13 @@ class TeacherRepository {
   }
 
   Future<ProxyAssignment> assignProxy(
-      String timetableId, String proxyTeacherId, String? reason) async {
+      String timetableId, String proxyTeacherId, String? reason,
+      {String? date}) async {
     final data = await _api.post(Endpoints.proxyAssign, body: {
       'timetable_id': timetableId,
       'proxy_teacher_id': proxyTeacherId,
       if (reason != null && reason.isNotEmpty) 'reason': reason,
+      if (date != null && date.isNotEmpty) 'date': date,
     });
     return ProxyAssignment.fromJson(data as Map<String, dynamic>);
   }
@@ -272,8 +274,8 @@ class TeacherRepository {
   }
 
   Future<List<Map<String, dynamic>>> getAvailableTeachers(
-      String timetableId) async {
-    final raw = await _api.get(Endpoints.proxyAvailable(timetableId));
+      String timetableId, {String? date}) async {
+    final raw = await _api.get(Endpoints.proxyAvailable(timetableId, date: date));
     final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
     return list
         .map((e) => e as Map<String, dynamic>)

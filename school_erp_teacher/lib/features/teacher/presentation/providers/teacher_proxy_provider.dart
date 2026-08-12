@@ -20,11 +20,12 @@ class ProxyController extends StateNotifier<AsyncValue<void>> {
   ProxyController(this._ref) : super(const AsyncValue.data(null));
 
   Future<bool> assignProxy(
-      String timetableId, String proxyTeacherId, String? reason) async {
+      String timetableId, String proxyTeacherId, String? reason,
+      {String? date}) async {
     state = const AsyncValue.loading();
     try {
       final repo = _ref.read(teacherRepositoryProvider);
-      await repo.assignProxy(timetableId, proxyTeacherId, reason);
+      await repo.assignProxy(timetableId, proxyTeacherId, reason, date: date);
       _ref.invalidate(myProxiesProvider);
       state = const AsyncValue.data(null);
       return true;
@@ -64,9 +65,9 @@ class ProxyController extends StateNotifier<AsyncValue<void>> {
   }
 
   Future<List<Map<String, dynamic>>> getAvailableTeachers(
-      String timetableId) async {
+      String timetableId, {String? date}) async {
     final repo = _ref.read(teacherRepositoryProvider);
-    return repo.getAvailableTeachers(timetableId);
+    return repo.getAvailableTeachers(timetableId, date: date);
   }
 }
 

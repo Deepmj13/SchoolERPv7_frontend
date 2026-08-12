@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_erp_student/core/connectivity/connectivity_provider.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/core/widgets/custom_button.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
@@ -37,6 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final isOnline = ref.watch(connectivityProvider).valueOrNull ?? true;
     ref.listen(authStateProvider, (prev, next) {
       if (next.status == AuthStatus.authenticated) {
         context.go('/student/dashboard');
@@ -56,6 +58,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (!isOnline) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.wifi_off,
+                                color: Colors.orange, size: 18),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'No internet connection. Please check your '
+                                'connection and try again.',
+                                style: TextStyle(
+                                    color: Colors.orange, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     const Icon(Icons.school_rounded,
                         size: 48, color: AppColors.primary),
                     const SizedBox(height: 16),
@@ -114,15 +144,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Icon(Icons.error_outline,
                                 color: AppColors.error, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
-                                authState.errorMessage!,
-                                style: const TextStyle(
-                                    color: AppColors.error, fontSize: 13),
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Unable to sign in',
+                                    style: TextStyle(
+                                      color: AppColors.error,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    authState.errorMessage!,
+                                    style: const TextStyle(
+                                        color: AppColors.error,
+                                        fontSize: 13),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

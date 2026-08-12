@@ -98,7 +98,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
-        errorMessage: 'Connection failed. Please check your network.',
+        errorMessage: 'Unexpected error. Please try again.',
       );
     }
   }

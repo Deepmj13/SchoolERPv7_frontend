@@ -332,27 +332,51 @@ Widget _quickActions(BuildContext context) {
   );
 }
 
+int _minutesOf(String time) {
+  final parts = time.split(':');
+  return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+}
+
 Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
+  final now = DateTime.now();
+  final currentMinutes = now.hour * 60 + now.minute;
+
+  TimetableEntry? ongoing;
+  final upcoming = <TimetableEntry>[];
+  for (final e in entries) {
+    final startMin = _minutesOf(e.startTime);
+    final endMin = _minutesOf(e.endTime);
+    if (currentMinutes >= startMin && currentMinutes <= endMin) {
+      ongoing ??= e;
+    } else if (currentMinutes < startMin) {
+      upcoming.add(e);
+    }
+  }
+  upcoming.sort((a, b) =>
+      _minutesOf(a.startTime).compareTo(_minutesOf(b.startTime)));
+
+  final visible = [if (ongoing != null) ongoing, ...upcoming];
+
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text("Today's Schedule",
           style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
-      if (entries.isEmpty)
+      if (visible.isEmpty)
         GlassCard(
           child: Row(
             children: [
-              Icon(Icons.check_circle,
+              Icon(Icons.event_available,
                   color: AppColors.success, size: 24),
               const SizedBox(width: 12),
-              Text('No classes scheduled for today',
+              Text('No classes now',
                   style: Theme.of(context).textTheme.bodyMedium),
             ],
           ),
         )
       else
-        ...entries.map(
+        ...visible.map(
           (e) => Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: GlassCard(
@@ -362,7 +386,9 @@ Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
                     width: 4,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppColors.primary,
+                      color: ongoing?.id == e.id
+                          ? AppColors.success
+                          : AppColors.primary,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -380,6 +406,28 @@ Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
                       ],
                     ),
                   ),
+                  if (ongoing?.id == e.id)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.circle,
+                              size: 6, color: AppColors.success),
+                          SizedBox(width: 4),
+                          Text('Now',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.success,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),

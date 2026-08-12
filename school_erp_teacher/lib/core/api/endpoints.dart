@@ -58,8 +58,9 @@ class Endpoints {
   static const String proxyPending = '$apiPrefix/proxy/pending';
   static String proxyTodayForClass(String classId) =>
       '$apiPrefix/proxy/today?classId=$classId';
-  static String proxyAvailable(String timetableId) =>
-      '$apiPrefix/proxy/available?timetableId=$timetableId';
+  static String proxyAvailable(String timetableId, {String? date}) =>
+      '$apiPrefix/proxy/available?timetableId=$timetableId'
+      '${date != null ? '&date=$date' : ''}';
 
   static const String remarks = '$apiPrefix/remarks';
   static String teacherRemarks(String id) => '$apiPrefix/remarks/teacher/$id';

@@ -8,6 +8,7 @@ import 'package:school_erp_teacher/features/teacher/presentation/providers/teach
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_dashboard_screen.dart';
 
 const _days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const _weekdayDays = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const _dayLabels = {
   'mon': 'Mon',
   'tue': 'Tue',
@@ -40,15 +41,34 @@ Color _colorForSubject(String subjectId) {
   return _subjectColors[subjectId.hashCode.abs() % _subjectColors.length];
 }
 
+String _formatDate(DateTime d) {
+  final m = d.month.toString().padLeft(2, '0');
+  final day = d.day.toString().padLeft(2, '0');
+  return '${d.year}-$m-$day';
+}
+
+String _dayForDate(DateTime d) => _weekdayDays[d.weekday - 1];
+
+String _dateStrForDay(String day, DateTime now) {
+  if (day == _dayForDate(now)) return _formatDate(now);
+  final tomorrow = now.add(const Duration(days: 1));
+  if (day == _dayForDate(tomorrow)) return _formatDate(tomorrow);
+  return _formatDate(now);
+}
+
+final selectedDayProvider = StateProvider<String>((ref) {
+  return _dayForDate(DateTime.now());
+});
+
 final teacherTimetableProvider =
     FutureProvider<List<TimetableEntry>>((ref) async {
   final teacherId = ref.watch(authStateProvider).user?.teacherId ?? '';
   if (teacherId.isEmpty) return Future.value([]);
   final repo = ref.watch(teacherRepositoryProvider);
+  final selectedDay = ref.watch(selectedDayProvider);
   final now = DateTime.now();
-  final todayStr =
-      '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-  return repo.getTeacherTimetable(teacherId, date: todayStr);
+  return repo.getTeacherTimetable(teacherId,
+      date: _dateStrForDay(selectedDay, now));
 });
 
 class TeacherTimetableScreen extends ConsumerStatefulWidget {
@@ -60,18 +80,6 @@ class TeacherTimetableScreen extends ConsumerStatefulWidget {
 }
 
 class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen> {
-  late String _selectedDay;
-
-  @override
-  void initState() {
-    super.initState();
-    final weekday = DateTime.now().weekday;
-    final todayIndex = weekday - 1;
-    _selectedDay = (todayIndex >= 0 && todayIndex < _days.length)
-        ? _days[todayIndex]
-        : 'mon';
-  }
-
   @override
   Widget build(BuildContext context) {
     final timetableAsync = ref.watch(teacherTimetableProvider);
@@ -122,9 +130,15 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
       grouped[day]!.sort((a, b) => a.startTime.compareTo(b.startTime));
     }
 
-    final dayEntries = grouped[_selectedDay] ?? [];
+    final selectedDay = ref.watch(selectedDayProvider);
+    final dayEntries = grouped[selectedDay] ?? [];
     final now = DateTime.now();
-    final isToday = _selectedDay == _days[(now.weekday - 1) % _days.length];
+    final todayDay = _dayForDate(now);
+    final tomorrowDay = _dayForDate(now.add(const Duration(days: 1)));
+    final isToday = selectedDay == todayDay;
+    final isTomorrow = selectedDay == tomorrowDay;
+    final canProxyDay = isToday || isTomorrow;
+    final selectedDate = _dateStrForDay(selectedDay, now);
 
     return Column(
       children: [
@@ -163,7 +177,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                   Row(
                     children: [
                       Text(
-                        _dayFullLabels[_selectedDay] ?? _selectedDay,
+                        _dayFullLabels[selectedDay] ?? selectedDay,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       if (isToday) ...[
@@ -185,12 +199,33 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                             ),
                           ),
                         ),
+                      ] else if (isTomorrow) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.info.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Tomorrow',
+                            style: TextStyle(
+                              color: AppColors.info,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ],
                     ],
                   ),
                   const SizedBox(height: 12),
                   ...dayEntries.map(
-                    (e) => _entryCard(context, e, isToday),
+                    (e) => _entryCard(
+                        context, e, isToday, isTomorrow, canProxyDay,
+                        date: selectedDate),
                   ),
                 ],
               ),
@@ -202,7 +237,8 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
 
   Widget _daySelector(BuildContext context) {
     final now = DateTime.now();
-    final todayDay = _days[(now.weekday - 1) % _days.length];
+    final todayDay = _dayForDate(now);
+    final selectedDay = ref.watch(selectedDayProvider);
 
     return Container(
       width: double.infinity,
@@ -222,7 +258,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: _days.map((day) {
-            final isSelected = day == _selectedDay;
+            final isSelected = day == selectedDay;
             final isToday = day == todayDay;
             return Padding(
               padding: const EdgeInsets.only(right: 10),
@@ -246,7 +282,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                 ),
                 selected: isSelected,
                 onSelected: (_) =>
-                    setState(() => _selectedDay = day),
+                    ref.read(selectedDayProvider.notifier).state = day,
                 selectedColor: AppColors.primary,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : null,
@@ -271,8 +307,9 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  Widget _entryCard(
-      BuildContext context, TimetableEntry entry, bool isToday) {
+  Widget _entryCard(BuildContext context, TimetableEntry entry, bool isToday,
+      bool isTomorrow, bool canProxyDay,
+      {required String date}) {
     final now = DateTime.now();
     final currentMinutes = now.hour * 60 + now.minute;
     final startParts = entry.startTime.split(':');
@@ -288,7 +325,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
 
     final teacherId =
         ref.read(authStateProvider).user?.teacherId ?? '';
-    final canProxy = isToday &&
+    final canProxy = canProxyDay &&
         !entry.hasProxy &&
         !isCompleted &&
         (entry.originalTeacherId == null ||
@@ -298,7 +335,8 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
       padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
         onLongPress: canProxy
-            ? () => _showProxyContextMenu(context, ref, entry)
+            ? () =>
+                _showProxyContextMenu(context, ref, entry, date: date)
             : null,
         child: GlassCard(
           child: Row(
@@ -348,7 +386,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (entry.hasProxy && isToday) ...[
+                        if (entry.hasProxy && canProxyDay) ...[
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -408,8 +446,9 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  void _showProxyContextMenu(
-      BuildContext context, WidgetRef ref, TimetableEntry entry) {
+  void _showProxyContextMenu(BuildContext context, WidgetRef ref,
+      TimetableEntry entry,
+      {required String date}) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -440,7 +479,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  _showAssignProxySheet(context, ref, entry);
+                  _showAssignProxySheet(context, ref, entry, date: date);
                 },
               ),
             ],
@@ -450,10 +489,12 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  void _showAssignProxySheet(
-      BuildContext context, WidgetRef ref, TimetableEntry entry) {
+  void _showAssignProxySheet(BuildContext context, WidgetRef ref,
+      TimetableEntry entry,
+      {required String date}) {
     final repo = ref.read(teacherRepositoryProvider);
-    final availableTeachersFuture = repo.getAvailableTeachers(entry.id);
+    final availableTeachersFuture =
+        repo.getAvailableTeachers(entry.id, date: date);
     String? selectedTeacherId;
     final reasonCtrl = TextEditingController();
     bool saving = false;
@@ -504,7 +545,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${entry.startTime} - ${entry.endTime}',
+                  '$date  |  ${entry.startTime} - ${entry.endTime}',
                   style: const TextStyle(
                       color: AppColors.textSecondary, fontSize: 12),
                 ),
@@ -589,6 +630,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                                   reasonCtrl.text.isNotEmpty
                                       ? reasonCtrl.text
                                       : null,
+                                  date: date,
                                 );
                             if (ctx.mounted) {
                               if (success) {

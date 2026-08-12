@@ -115,18 +115,20 @@ class ApiClient {
       }
 
       if (response.statusCode == 401 && retryCount == 0) {
-        final refreshed = await _tryRefreshToken();
-        if (refreshed) {
-          return _request(method, path,
-              body: body,
-              queryParams: queryParams,
-              timeout: timeout,
-              retryCount: retryCount + 1);
+        final token = await _storage.getToken();
+        if (token != null) {
+          final refreshed = await _tryRefreshToken();
+          if (refreshed) {
+            return _request(method, path,
+                body: body,
+                queryParams: queryParams,
+                timeout: timeout,
+                retryCount: retryCount + 1);
+          }
+          await _storage.clear();
+          onUnauthorized?.call();
+          throw ApiException(401, 'Session expired. Please login again.');
         }
-        await _storage.clear();
-        onUnauthorized?.call();
-        throw ApiException(
-            401, 'Session expired. Please login again.');
       }
 
       if (_isTransientStatusCode(response.statusCode) &&
@@ -152,7 +154,8 @@ class ApiClient {
             retryCount: retryCount + 1);
       }
       AppLogger.api.warning('$method $path timed out (retry=$retryCount)');
-      throw ApiException(0, 'Request timed out. Please try again.');
+      throw ApiException(
+          0, 'The server is not responding. Please try again later.');
     } on SocketException {
       AppLogger.api.warning('$method $path network error (retry=$retryCount)');
       if (retryCount < _maxRetries) {
@@ -164,7 +167,9 @@ class ApiClient {
             retryCount: retryCount + 1);
       }
       throw ApiException(
-          0, 'No internet connection. Please check your network.');
+          0,
+          'Cannot connect to the server. Please check your internet '
+          'connection or try again later.');
     } on http.ClientException catch (e) {
       AppLogger.api.warning('$method $path client error: ${e.message} (retry=$retryCount)');
       if (retryCount < _maxRetries) {
@@ -175,7 +180,8 @@ class ApiClient {
             timeout: timeout,
             retryCount: retryCount + 1);
       }
-      throw ApiException(0, 'Connection error: ${e.message}');
+      throw ApiException(
+          0, 'Unable to reach the server. Please try again later.');
     }
   }
 
