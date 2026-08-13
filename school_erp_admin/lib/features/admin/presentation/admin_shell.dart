@@ -270,6 +270,12 @@ class _MobileLayoutState extends State<_MobileLayout> {
                     currentRoute: currentRoute,
                   ),
                   _drawerItem(
+                    icon: Icons.swap_horiz_rounded,
+                    label: 'Proxies',
+                    route: '/admin/proxies',
+                    currentRoute: currentRoute,
+                  ),
+                  _drawerItem(
                     icon: Icons.groups_rounded,
                     label: 'Staff',
                     route: '/admin/staff',

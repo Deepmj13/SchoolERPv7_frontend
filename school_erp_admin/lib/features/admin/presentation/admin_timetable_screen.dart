@@ -5,6 +5,7 @@ import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/custom_button.dart';
 import 'package:school_erp_admin/core/widgets/error_retry_widget.dart';
 import 'package:school_erp_admin/core/widgets/list_skeleton_loader.dart';
+import 'package:school_erp_admin/features/admin/data/admin_repository.dart';
 import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/timetable_provider.dart';
@@ -231,9 +232,7 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                                   final span = nextSlot != null ? _calcSpan(e, slot, nextSlot, slots) : 1;
                                   return GestureDetector(
                                     onTap: () => _showEntryForm(e),
-                                    onLongPress: _isTodayEntry(e)
-                                        ? () => _showAssignProxySheet(e)
-                                        : null,
+                                    onLongPress: () => _showAssignProxySheet(e),
                                     child: Container(
                                       height: rowH * span - 4,
                                       margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
@@ -344,9 +343,7 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                   margin: const EdgeInsets.only(bottom: 4),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   child: GestureDetector(
-                    onLongPress: _isTodayEntry(e)
-                        ? () => _showAssignProxySheet(e)
-                        : null,
+                    onLongPress: () => _showAssignProxySheet(e),
                     child: ListTile(
                       dense: true,
                       leading: Container(
@@ -634,15 +631,68 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
     return day == todayDay;
   }
 
-  bool _isTodayEntry(TimetableEntry entry) {
-    return _isToday(entry.day) && !entry.hasProxy;
+  String _formatDate(DateTime date) =>
+      '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  String _nextDateForDay(String day) {
+    const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    final target = days.indexOf(day);
+    final now = DateTime.now();
+    int diff = target - (now.weekday - 1);
+    if (diff <= 0) diff += 7;
+    return _formatDate(now.add(Duration(days: diff)));
+  }
+
+  String _defaultDateForDay(String day) {
+    if (_isToday(day)) return _formatDate(DateTime.now());
+    return _nextDateForDay(day);
+  }
+
+  Future<ProxyAssignment?> _findCurrentProxy(
+      AdminRepository repo, String timetableId, String date) async {
+    final proxies = await repo.getAdminProxies(date);
+    for (final p in proxies) {
+      if (p.timetableId == timetableId &&
+          (p.status == 'pending' || p.status == 'accepted')) {
+        return p;
+      }
+    }
+    return null;
+  }
+
+  Future<({Map<String, dynamic> teachers, ProxyAssignment? current})>
+      _loadSheetData(
+          AdminRepository repo, TimetableEntry entry, String date) async {
+    final teachers = await repo.getProxyTeachers(entry.id, date: date);
+    final current = await _findCurrentProxy(repo, entry.id, date);
+    return (teachers: teachers, current: current);
+  }
+
+  Future<DateTime?> _pickProxyDate(TimetableEntry entry) async {
+    final now = DateTime.now();
+    final initial = DateTime.parse(_defaultDateForDay(entry.day));
+    return showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: now.subtract(const Duration(days: 1)),
+      lastDate: now.add(const Duration(days: 365)),
+      selectableDayPredicate: (day) {
+        const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+        return day.weekday >= 1 && day.weekday <= 6 && days[day.weekday - 1] == entry.day;
+      },
+    );
   }
 
   void _showAssignProxySheet(TimetableEntry entry) {
     final repo = ref.read(adminRepositoryProvider);
+    String selectedDate = _defaultDateForDay(entry.day);
     String? selectedTeacherId;
     final reasonCtrl = TextEditingController();
     bool saving = false;
+    bool canceling = false;
+    late Future<({Map<String, dynamic> teachers, ProxyAssignment? current})>
+        sheetDataFuture;
+    sheetDataFuture = _loadSheetData(repo, entry, selectedDate);
 
     showModalBottomSheet(
       context: context,
@@ -676,7 +726,7 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Assign Proxy',
+                  entry.hasProxy ? 'Manage Proxy' : 'Assign Proxy',
                   style: Theme.of(context)
                       .textTheme
                       .titleLarge
@@ -685,126 +735,350 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${entry.subjectName ?? "Lecture"} - ${entry.classDisplay}',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${entry.startTime} - ${entry.endTime}',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
                 ),
                 const SizedBox(height: 20),
-                FutureBuilder<List<Map<String, dynamic>>>(
-                  future: repo.getAvailableTeachers(entry.id),
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () async {
+                    final picked = await _pickProxyDate(entry);
+                    if (picked != null) {
+                      final newDate = _formatDate(picked);
+                      setSheetState(() {
+                        selectedDate = newDate;
+                        selectedTeacherId = null;
+                        saving = false;
+                        sheetDataFuture = _loadSheetData(repo, entry, newDate);
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Proxy Date',
+                      prefixIcon: Icon(Icons.calendar_today),
+                    ),
+                    child: Text(
+                      selectedDate,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FutureBuilder<
+                    ({Map<String, dynamic> teachers, ProxyAssignment? current})>(
+                  future: sheetDataFuture,
                   builder: (ctx, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        padding: EdgeInsets.symmetric(vertical: 24),
                         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
                       );
                     }
-                    if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+                    if (snapshot.hasError || snapshot.data == null) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           snapshot.hasError
                               ? 'Failed to load teachers'
-                              : 'No available teachers for this slot',
-                          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              : 'No teachers found',
+                          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                         ),
                       );
                     }
-                    final teachers = snapshot.data!;
-                    return DropdownButtonFormField<String>(
-                      value: selectedTeacherId,
-                      decoration: const InputDecoration(
-                        labelText: 'Proxy Teacher *',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      items: teachers
-                          .map((t) => DropdownMenuItem(
-                                value: t['id'] as String,
-                                child: Text(t['full_name'] as String),
-                              ))
-                          .toList(),
-                      onChanged: (v) {
-                        if (v != null) setSheetState(() => selectedTeacherId = v);
-                      },
+                    final teachers = snapshot.data!.teachers;
+                    final current = snapshot.data!.current;
+                    final available = (teachers['available'] as List? ?? [])
+                        .cast<Map<String, dynamic>>();
+                    final busy = (teachers['busy'] as List? ?? [])
+                        .cast<Map<String, dynamic>>();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (current != null) ...[
+                          _buildCurrentProxySection(
+                            proxy: current,
+                            canceling: canceling,
+                            onCancel: () async {
+                              setSheetState(() => canceling = true);
+                              try {
+                                await repo.cancelProxy(current.id);
+                                ref.invalidate(timetableEntriesProvider);
+                                if (ctx.mounted) Navigator.pop(ctx);
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Proxy cancelled'),
+                                      backgroundColor: AppColors.error,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                setSheetState(() => canceling = false);
+                                if (ctx.mounted) {
+                                  ScaffoldMessenger.of(ctx).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Failed to cancel: $e'),
+                                      backgroundColor: AppColors.error,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (available.isEmpty && busy.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text(
+                              'No teachers found for this slot',
+                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                            ),
+                          ),
+                        if (available.isNotEmpty)
+                          _buildProxyTeacherSection(
+                            title: 'Available',
+                            teachers: available,
+                            selectedTeacherId: selectedTeacherId,
+                            onSelect: (v) => setSheetState(() {
+                              selectedTeacherId = v;
+                            }),
+                          ),
+                        if (busy.isNotEmpty)
+                          _buildProxyTeacherSection(
+                            title: 'Busy',
+                            teachers: busy,
+                            selectedTeacherId: selectedTeacherId,
+                            busySubtitle: 'Busy at this slot',
+                            onSelect: (v) => setSheetState(() {
+                              selectedTeacherId = v;
+                            }),
+                          ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: reasonCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Reason (optional)',
+                            prefixIcon: Icon(Icons.message),
+                            hintText: 'e.g. Teacher leave',
+                          ),
+                          maxLines: 2,
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: (selectedTeacherId != null && !saving)
+                                ? () async {
+                                    setSheetState(() => saving = true);
+                                    try {
+                                      final data = await sheetDataFuture;
+                                      if (data.current != null) {
+                                        await repo.cancelProxy(data.current!.id);
+                                      }
+                                      await repo.assignProxy(
+                                        entry.id,
+                                        selectedTeacherId!,
+                                        reasonCtrl.text.isNotEmpty
+                                            ? reasonCtrl.text
+                                            : null,
+                                        date: selectedDate,
+                                      );
+                                      ref.invalidate(timetableEntriesProvider);
+                                      if (ctx.mounted) Navigator.pop(ctx);
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Proxy assigned successfully'),
+                                            backgroundColor: AppColors.success,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      setSheetState(() => saving = false);
+                                      if (ctx.mounted) {
+                                        ScaffoldMessenger.of(ctx).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Failed: $e'),
+                                            backgroundColor: AppColors.error,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                : null,
+                            child: saving
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(current != null ? 'Reassign' : 'Assign Proxy'),
+                          ),
+                        ),
+                      ],
                     );
                   },
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: reasonCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Reason (optional)',
-                    prefixIcon: Icon(Icons.message),
-                    hintText: 'e.g. Teacher leave',
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: (selectedTeacherId != null && !saving)
-                        ? () async {
-                            setSheetState(() => saving = true);
-                            try {
-                              await repo.assignProxy(
-                                entry.id,
-                                selectedTeacherId!,
-                                reasonCtrl.text.isNotEmpty
-                                    ? reasonCtrl.text
-                                    : null,
-                              );
-                              ref.invalidate(timetableEntriesProvider);
-                              if (ctx.mounted) Navigator.pop(ctx);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Proxy assigned successfully'),
-                                    backgroundColor: AppColors.success,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              setSheetState(() => saving = false);
-                              if (ctx.mounted) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Failed: $e'),
-                                    backgroundColor: AppColors.error,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                              }
-                            }
-                          }
-                        : null,
-                    child: saving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text('Assign Proxy'),
-                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildCurrentProxySection({
+    required ProxyAssignment proxy,
+    required bool canceling,
+    required Future<void> Function() onCancel,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.swap_horiz, size: 18, color: AppColors.warning),
+              const SizedBox(width: 6),
+              const Text(
+                'Current Proxy',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  proxy.statusLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.warning,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${proxy.proxyTeacherName} is assigned for this slot',
+            style: const TextStyle(fontSize: 13),
+          ),
+          if (proxy.reason != null && proxy.reason!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Reason: ${proxy.reason}',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+          ],
+          const SizedBox(height: 4),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: canceling ? null : onCancel,
+              icon: canceling
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.close, size: 16),
+              label: const Text('Cancel Proxy'),
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProxyTeacherSection({
+    required String title,
+    required List<Map<String, dynamic>> teachers,
+    required String? selectedTeacherId,
+    bool selectable = true,
+    String? busySubtitle,
+    required void Function(String?)? onSelect,
+  }) {
+    if (teachers.isEmpty) return const SizedBox.shrink();
+    final isBusy = busySubtitle != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 4, bottom: 4),
+          child: Text(
+            '$title (${teachers.length})',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: isBusy
+                  ? AppColors.warning
+                  : (selectable ? AppColors.success : AppColors.textSecondary),
+            ),
+          ),
+        ),
+        ...teachers.map((t) {
+          final id = t['id'] as String;
+          final name = t['full_name'] as String? ?? '';
+          final selected = id == selectedTeacherId;
+          return ListTile(
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              size: 20,
+              color: selected ? AppColors.success : AppColors.textSecondary,
+            ),
+            title: Text(
+              name,
+              style: TextStyle(
+                fontSize: 14,
+                color: isBusy ? AppColors.textSecondary : null,
+              ),
+            ),
+            subtitle: busySubtitle != null
+                ? Text(
+                    busySubtitle,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  )
+                : null,
+            onTap: selectable ? () => onSelect?.call(id) : null,
+          );
+        }),
+      ],
     );
   }
 

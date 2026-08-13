@@ -18,6 +18,7 @@ class AdminMoreScreen extends ConsumerWidget {
       _MoreItem(icon: Icons.assignment_rounded, label: 'Exams', route: '/admin/exams'),
       _MoreItem(icon: Icons.grade_rounded, label: 'Grading', route: '/admin/grading'),
       _MoreItem(icon: Icons.calendar_month_rounded, label: 'Timetable', route: '/admin/timetable'),
+      _MoreItem(icon: Icons.swap_horiz_rounded, label: 'Proxies', route: '/admin/proxies'),
       _MoreItem(icon: Icons.trending_up_rounded, label: 'Attendance', route: '/admin/attendance-report'),
     ],
     reports: [

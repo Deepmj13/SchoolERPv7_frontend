@@ -12,6 +12,7 @@ import 'package:school_erp_admin/features/admin/presentation/admin_holidays_scre
 import 'package:school_erp_admin/features/admin/presentation/admin_mark_entry_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_more_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_promotion_screen.dart';
+import 'package:school_erp_admin/features/admin/presentation/admin_proxies_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_reports_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_staff_screen.dart';
 import 'package:school_erp_admin/features/admin/presentation/admin_settings_screen.dart';
@@ -185,6 +186,14 @@ GoRouter createRouter(StorageInterface storage) {
             name: RouteNames.adminMore,
             pageBuilder: (context, state) => _fadePage(
               const AdminMoreScreen(),
+              state,
+            ),
+          ),
+          GoRoute(
+            path: '/admin/proxies',
+            name: RouteNames.adminProxies,
+            pageBuilder: (context, state) => _fadePage(
+              const AdminProxiesScreen(),
               state,
             ),
           ),

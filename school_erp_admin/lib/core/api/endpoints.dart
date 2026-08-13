@@ -54,8 +54,8 @@ class Endpoints {
   static String proxyCancel(String id) => '$apiPrefix/proxy/$id';
   static String proxyTodayForClass(String classId) =>
       '$apiPrefix/proxy/today?classId=$classId';
-  static String proxyAvailable(String timetableId) =>
-      '$apiPrefix/proxy/available?timetableId=$timetableId';
+  static const String proxyAvailable = '$apiPrefix/proxy/available';
+  static const String proxyTeachers = '$apiPrefix/proxy/teachers';
   static const String proxyAdminAll = '$apiPrefix/proxy/admin/all';
 
   static const String feeStructures = '$apiPrefix/fees/structures';

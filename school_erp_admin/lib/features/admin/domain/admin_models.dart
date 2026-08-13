@@ -911,6 +911,14 @@ class ProxyAssignment {
         : className!;
   }
 
+  String get dayLabel {
+    const days = {
+      'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
+      'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday',
+    };
+    return days[day] ?? day ?? '';
+  }
+
   String get statusLabel {
     switch (status) {
       case 'pending': return 'Pending';

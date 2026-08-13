@@ -20,4 +20,5 @@ class RouteNames {
   static const String adminPromotion = 'adminPromotion';
   static const String adminHolidays = 'adminHolidays';
   static const String adminStaff = 'adminStaff';
+  static const String adminProxies = 'adminProxies';
 }

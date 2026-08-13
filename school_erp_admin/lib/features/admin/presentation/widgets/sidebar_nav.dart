@@ -84,6 +84,7 @@ class SidebarNav extends ConsumerWidget {
       (Icons.assignment_rounded, 'Exams', '/admin/exams'),
       (Icons.grade_rounded, 'Grading', '/admin/grading'),
       (Icons.calendar_month_rounded, 'Timetable', '/admin/timetable'),
+      (Icons.swap_horiz_rounded, 'Proxies', '/admin/proxies'),
       (Icons.bar_chart_rounded, 'Reports', '/admin/reports'),
       (Icons.attach_money_rounded, 'Fees', '/admin/fees'),
       (Icons.campaign_rounded, 'Announcements', '/admin/announcements'),

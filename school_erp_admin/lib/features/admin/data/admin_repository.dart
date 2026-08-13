@@ -898,18 +898,38 @@ class AdminRepository {
   }
 
   Future<ProxyAssignment> assignProxy(
-      String timetableId, String proxyTeacherId, String? reason) async {
+      String timetableId, String proxyTeacherId, String? reason,
+      {String? date}) async {
     try {
       final data = await _api.post(Endpoints.proxyAssign, body: {
         'timetable_id': timetableId,
         'proxy_teacher_id': proxyTeacherId,
         if (reason != null && reason.isNotEmpty) 'reason': reason,
+        if (date != null && date.isNotEmpty) 'date': date,
       });
       return ProxyAssignment.fromJson(data as Map<String, dynamic>);
     } on ApiException {
       rethrow;
     } catch (e) {
       throw ApiException(0, 'Failed to assign proxy: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getProxyTeachers(
+      String timetableId, {String? date}) async {
+    try {
+      final raw = await _api.get(
+        Endpoints.proxyTeachers,
+        queryParams: {
+          'timetableId': timetableId,
+          if (date != null && date.isNotEmpty) 'date': date,
+        },
+      );
+      return raw as Map<String, dynamic>;
+    } on ApiException {
+      rethrow;
+    } catch (e) {
+      throw ApiException(0, 'Failed to load teachers: $e');
     }
   }
 
@@ -926,7 +946,10 @@ class AdminRepository {
   Future<List<Map<String, dynamic>>> getAvailableTeachers(
       String timetableId) async {
     try {
-      final raw = await _api.get(Endpoints.proxyAvailable(timetableId));
+      final raw = await _api.get(
+        Endpoints.proxyAvailable,
+        queryParams: {'timetableId': timetableId},
+      );
       final list = raw is Map<String, dynamic> ? raw['data'] as List : raw as List;
       return list
           .map((e) => e as Map<String, dynamic>)
