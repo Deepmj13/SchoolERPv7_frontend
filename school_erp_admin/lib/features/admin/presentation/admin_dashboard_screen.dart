@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/glass_card.dart';
+import 'package:school_erp_admin/core/widgets/shimmer.dart';
+import 'package:school_erp_admin/core/widgets/skeleton_loader.dart';
 import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 import 'package:school_erp_admin/features/admin/presentation/widgets/dashboard_chart.dart';
@@ -18,7 +20,8 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
@@ -42,42 +45,49 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.all(padding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeaderSkeleton(context, isMobile),
-          SizedBox(height: isMobile ? 20 : 32),
-          if (isMobile)
-            SizedBox(
-              height: 120,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: 4,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
-                itemBuilder: (_, _) => const _ShimmerCard(width: 140),
+      child: Shimmer(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeaderSkeleton(context, isMobile),
+            SizedBox(height: isMobile ? 20 : 32),
+            if (isMobile)
+              SizedBox(
+                height: 120,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: 4,
+                  separatorBuilder: (_, _) => const SizedBox(width: 12),
+                  itemBuilder: (_, _) => const _ShimmerCard(width: 140),
+                ),
+              )
+            else
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final crossAxisCount = constraints.maxWidth >= 1100 ? 4 : 3;
+                  return GridView.count(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 24,
+                    mainAxisSpacing: 24,
+                    childAspectRatio: 1.3,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: List.generate(4, (_) => const _ShimmerCard()),
+                  );
+                },
               ),
-            )
-          else
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final crossAxisCount = constraints.maxWidth >= 1100 ? 4 : 3;
-                return GridView.count(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 24,
-                  mainAxisSpacing: 24,
-                  childAspectRatio: 1.3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: List.generate(4, (_) => const _ShimmerCard()),
-                );
-              },
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildError(BuildContext context, WidgetRef ref, Object e, bool isMobile) {
+  Widget _buildError(
+    BuildContext context,
+    WidgetRef ref,
+    Object e,
+    bool isMobile,
+  ) {
     final padding = isMobile ? 16.0 : 32.0;
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -100,15 +110,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       color: AppColors.error.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Icon(Icons.cloud_off_rounded,
-                        color: AppColors.error, size: 36),
+                    child: const Icon(
+                      Icons.cloud_off_rounded,
+                      color: AppColors.error,
+                      size: 36,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   Text(
                     'Failed to load statistics',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Padding(
@@ -134,7 +147,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, DashboardStats stats, bool isMobile) {
+  Widget _buildContent(
+    BuildContext context,
+    DashboardStats stats,
+    bool isMobile,
+  ) {
     final weekData = _generateWeekData(stats.todayAttendancePercentage);
     final padding = isMobile ? 16.0 : 32.0;
 
@@ -162,8 +179,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final greeting = hour < 12
         ? 'Good morning'
         : hour < 17
-            ? 'Good afternoon'
-            : 'Good evening';
+        ? 'Good afternoon'
+        : 'Good evening';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,24 +192,24 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               Text(
                 '$greeting, Admin',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontSize: isMobile ? 22 : 28,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontSize: isMobile ? 22 : 28,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               SizedBox(height: isMobile ? 4 : 6),
               Text(
                 _formatDateShort(now),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: isMobile ? 13 : 14,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: isMobile ? 13 : 14),
               ),
               if (!isMobile) ...[
                 const SizedBox(height: 4),
                 Text(
                   "Here's what's happening in your institution today.",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontSize: 14,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontSize: 14),
                 ),
               ],
             ],
@@ -201,8 +218,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         CircleAvatar(
           radius: isMobile ? 18 : 20,
           backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-          child: const Icon(Icons.admin_panel_settings,
-              color: AppColors.primary, size: 22),
+          child: const Icon(
+            Icons.admin_panel_settings,
+            color: AppColors.primary,
+            size: 22,
+          ),
         ),
       ],
     );
@@ -215,34 +235,33 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
+            SkeletonLoader(
               width: isMobile ? 140 : 200,
               height: isMobile ? 22 : 28,
-              decoration: BoxDecoration(
-                color: AppColors.textSecondary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-              ),
+              borderRadius: BorderRadius.circular(8),
             ),
             SizedBox(height: isMobile ? 6 : 10),
-            Container(
+            SkeletonLoader(
               width: isMobile ? 120 : 250,
               height: 14,
-              decoration: BoxDecoration(
-                color: AppColors.textSecondary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-              ),
+              borderRadius: BorderRadius.circular(6),
             ),
           ],
         ),
-        CircleAvatar(
-          radius: isMobile ? 18 : 20,
-          backgroundColor: AppColors.textSecondary.withValues(alpha: 0.1),
+        SkeletonLoader(
+          width: isMobile ? 36 : 40,
+          height: isMobile ? 36 : 40,
+          borderRadius: BorderRadius.circular(isMobile ? 18 : 20),
         ),
       ],
     );
   }
 
-  Widget _buildStatsSection(BuildContext context, DashboardStats stats, bool isMobile) {
+  Widget _buildStatsSection(
+    BuildContext context,
+    DashboardStats stats,
+    bool isMobile,
+  ) {
     if (isMobile) {
       return SizedBox(
         height: 115,
@@ -277,7 +296,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 return _CompactStatCard(
                   icon: Icons.trending_up_rounded,
                   label: 'Attendance',
-                  value: '${stats.todayAttendancePercentage.toStringAsFixed(1)}%',
+                  value:
+                      '${stats.todayAttendancePercentage.toStringAsFixed(1)}%',
                   color: AppColors.primary,
                 );
             }
@@ -329,8 +349,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               trend: stats.todayAttendancePercentage >= 90
                   ? '+2.1%'
                   : stats.todayAttendancePercentage >= 75
-                      ? '-1.3%'
-                      : '-4.8%',
+                  ? '-1.3%'
+                  : '-4.8%',
               trendUp: stats.todayAttendancePercentage >= 90,
             ),
           ],
@@ -340,7 +360,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   }
 
   Widget _buildChartsSection(
-      BuildContext context, DashboardStats stats, List<double> weekData, bool isMobile) {
+    BuildContext context,
+    DashboardStats stats,
+    List<double> weekData,
+    bool isMobile,
+  ) {
     const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final attendanceMap = <String, double>{};
     for (int i = 0; i < weekDays.length && i < weekData.length; i++) {
@@ -363,7 +387,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildActivitySection(BuildContext context, DashboardStats stats, bool isMobile) {
+  Widget _buildActivitySection(
+    BuildContext context,
+    DashboardStats stats,
+    bool isMobile,
+  ) {
     final cardPadding = isMobile ? 16.0 : 20.0;
     return GlassCard(
       padding: EdgeInsets.all(cardPadding),
@@ -375,12 +403,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             children: [
               Text(
                 'Recent Activity',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
-              Icon(Icons.history_rounded,
-                  size: 18, color: AppColors.textSecondary),
+              Icon(
+                Icons.history_rounded,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
             ],
           ),
           SizedBox(height: isMobile ? 12 : 16),
@@ -415,8 +446,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             subtitle: stats.todayAttendancePercentage >= 90
                 ? 'Excellent attendance at ${stats.todayAttendancePercentage.toStringAsFixed(1)}% today!'
                 : stats.todayAttendancePercentage >= 75
-                    ? 'Attendance is at ${stats.todayAttendancePercentage.toStringAsFixed(1)}%. Room for improvement.'
-                    : 'Attendance dropped to ${stats.todayAttendancePercentage.toStringAsFixed(1)}%. Please review.',
+                ? 'Attendance is at ${stats.todayAttendancePercentage.toStringAsFixed(1)}%. Room for improvement.'
+                : 'Attendance dropped to ${stats.todayAttendancePercentage.toStringAsFixed(1)}%. Please review.',
           ),
         ],
       ),
@@ -425,8 +456,18 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   String _formatDateShort(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -435,111 +476,65 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final rng = Random();
     return List.generate(7, (i) {
       if (i == 6) return todayPercentage;
-      return (todayPercentage + (rng.nextDouble() - 0.5) * 16)
-          .clamp(60.0, 100.0);
+      return (todayPercentage + (rng.nextDouble() - 0.5) * 16).clamp(
+        60.0,
+        100.0,
+      );
     });
   }
 }
 
-class _ShimmerCard extends StatefulWidget {
+class _ShimmerCard extends StatelessWidget {
   final double? width;
   const _ShimmerCard({this.width});
 
   @override
-  State<_ShimmerCard> createState() => _ShimmerCardState();
-}
-
-class _ShimmerCardState extends State<_ShimmerCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: Tween<double>(begin: 0.3, end: 0.7).animate(
-        CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-      ),
-      child: GlassCard(
-        padding: EdgeInsets.all(widget.width != null ? 14 : 20),
-        width: widget.width,
-        child: widget.width != null
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 60,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    width: 50,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  const Spacer(),
-                  Container(
-                    width: 100,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: 80,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: AppColors.textSecondary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              ),
+    final isCompact = width != null;
+    return GlassCard(
+      padding: EdgeInsets.all(isCompact ? 14 : 20),
+      width: width,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: isCompact
+            ? [
+                SkeletonLoader(
+                  width: 32,
+                  height: 32,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                const Spacer(),
+                SkeletonLoader(
+                  width: 60,
+                  height: 20,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                const SizedBox(height: 6),
+                SkeletonLoader(
+                  width: 50,
+                  height: 12,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ]
+            : [
+                SkeletonLoader(
+                  width: 44,
+                  height: 44,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                const Spacer(),
+                SkeletonLoader(
+                  width: 100,
+                  height: 28,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                const SizedBox(height: 8),
+                SkeletonLoader(
+                  width: 80,
+                  height: 14,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ],
       ),
     );
   }
@@ -579,18 +574,18 @@ class _CompactStatCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  height: 1.1,
-                ),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+              height: 1.1,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 12,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -634,16 +629,16 @@ class _ActivityTile extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 13,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 13),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

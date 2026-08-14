@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_teacher/core/theme/app_colors.dart';
 import 'package:school_erp_teacher/core/widgets/custom_button.dart';
 import 'package:school_erp_teacher/core/widgets/glass_card.dart';
+import 'package:school_erp_teacher/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_teacher/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_teacher/features/teacher/domain/teacher_models.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/teacher_dashboard_screen.dart';
 
-final teacherAnnouncementsProvider =
-    FutureProvider<List<Announcement>>((ref) {
+final teacherAnnouncementsProvider = FutureProvider<List<Announcement>>((ref) {
   final teacherId = ref.watch(authStateProvider).user?.teacherId ?? '';
   final repo = ref.watch(teacherRepositoryProvider);
   return repo.getTeacherAnnouncements(teacherId);
@@ -16,10 +16,10 @@ final teacherAnnouncementsProvider =
 
 final teacherClassesForAnnouncementsProvider =
     FutureProvider<List<TeacherClass>>((ref) {
-  final teacherId = ref.watch(authStateProvider).user?.teacherId ?? '';
-  final repo = ref.watch(teacherRepositoryProvider);
-  return repo.getTeacherClasses(teacherId);
-});
+      final teacherId = ref.watch(authStateProvider).user?.teacherId ?? '';
+      final repo = ref.watch(teacherRepositoryProvider);
+      return repo.getTeacherClasses(teacherId);
+    });
 
 class TeacherAnnouncementsScreen extends ConsumerStatefulWidget {
   const TeacherAnnouncementsScreen({super.key});
@@ -56,14 +56,14 @@ class _TeacherAnnouncementsScreenState
     try {
       final repo = ref.read(teacherRepositoryProvider);
       for (final classId in _selectedClassIds) {
-          await repo.createAnnouncement(
-            _titleController.text.trim(),
-            _bodyController.text.trim().isEmpty
-                ? null
-                : _bodyController.text.trim(),
-            classId,
-          );
-        }
+        await repo.createAnnouncement(
+          _titleController.text.trim(),
+          _bodyController.text.trim().isEmpty
+              ? null
+              : _bodyController.text.trim(),
+          classId,
+        );
+      }
       _titleController.clear();
       _bodyController.clear();
       setState(() {
@@ -73,16 +73,15 @@ class _TeacherAnnouncementsScreenState
       ref.invalidate(teacherAnnouncementsProvider);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Announcement posted successfully')),
+          const SnackBar(content: Text('Announcement posted successfully')),
         );
       }
     } catch (e) {
       setState(() => _isSubmitting = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to post: $e')));
       }
     }
   }
@@ -99,8 +98,10 @@ class _TeacherAnnouncementsScreenState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('New Announcement',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'New Announcement',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             GlassCard(
               child: Column(
@@ -123,8 +124,7 @@ class _TeacherAnnouncementsScreenState
                   ),
                   const SizedBox(height: 16),
                   classesAsync.when(
-                    loading: () =>
-                        const CircularProgressIndicator(),
+                    loading: () => const CircularProgressIndicator(),
                     error: (e, _) => Text('Error: $e'),
                     data: (classes) {
                       final unique = <String, String>{};
@@ -135,8 +135,7 @@ class _TeacherAnnouncementsScreenState
                         spacing: 8,
                         runSpacing: 4,
                         children: unique.entries.map((e) {
-                          final selected =
-                              _selectedClassIds.contains(e.key);
+                          final selected = _selectedClassIds.contains(e.key);
                           return FilterChip(
                             label: Text(e.value),
                             selected: selected,
@@ -166,80 +165,93 @@ class _TeacherAnnouncementsScreenState
               ),
             ),
             const SizedBox(height: 24),
-            Text('My Announcements',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'My Announcements',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 12),
             announcementsAsync.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
-              error: (e, _) =>
-                  Text('Failed to load: $e',
-                      style: const TextStyle(color: AppColors.error)),
+              loading: () => const ListSkeletonLoader(
+                scrollable: false,
+                padding: 0,
+                itemCount: 2,
+              ),
+              error: (e, _) => Text(
+                'Failed to load: $e',
+                style: const TextStyle(color: AppColors.error),
+              ),
               data: (announcements) {
                 if (announcements.isEmpty) {
                   return const GlassCard(
-                    child: Center(
-                      child: Text('No announcements yet'),
-                    ),
+                    child: Center(child: Text('No announcements yet')),
                   );
                 }
                 return Column(
-                  children: announcements.map(
-                    (a) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: GlassCard(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text(a.title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium),
-                            if (a.body != null &&
-                                a.body!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(a.body!,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium),
-                            ],
-                            const SizedBox(height: 8),
-                            Row(
+                  children: announcements
+                      .map(
+                        (a) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: GlassCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (!a.isSchoolWide)
-                                  Container(
-                                    padding:
-                                        const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.info
-                                          .withValues(alpha: 0.1),
-                                      borderRadius:
-                                          BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                        'Class-specific',
-                                        style: TextStyle(
-                                            fontSize: 11,
-                                            color: AppColors.info)),
-                                  ),
-                                if (!a.isSchoolWide)
-                                  const SizedBox(width: 8),
                                 Text(
-                                  _formatDate(a.createdAt),
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary),
+                                  a.title,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                if (a.body != null && a.body!.isNotEmpty) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    a.body!,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    if (!a.isSchoolWide)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.info.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'Class-specific',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: AppColors.info,
+                                          ),
+                                        ),
+                                      ),
+                                    if (!a.isSchoolWide)
+                                      const SizedBox(width: 8),
+                                    Text(
+                                      _formatDate(a.createdAt),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  ).toList(),
+                      )
+                      .toList(),
                 );
               },
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_teacher/core/theme/app_colors.dart';
 import 'package:school_erp_teacher/core/widgets/custom_button.dart';
 import 'package:school_erp_teacher/core/widgets/glass_card.dart';
+import 'package:school_erp_teacher/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_teacher/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_teacher/features/teacher/domain/teacher_models.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/providers/teacher_assignments_provider.dart';
@@ -10,10 +11,7 @@ import 'package:school_erp_teacher/features/teacher/presentation/providers/teach
 class TeacherAssignmentDetailScreen extends ConsumerStatefulWidget {
   final String assignmentId;
 
-  const TeacherAssignmentDetailScreen({
-    super.key,
-    required this.assignmentId,
-  });
+  const TeacherAssignmentDetailScreen({super.key, required this.assignmentId});
 
   @override
   ConsumerState<TeacherAssignmentDetailScreen> createState() =>
@@ -32,9 +30,9 @@ class _TeacherAssignmentDetailScreenState
 
   void _loadAssignment() {
     final state = ref.read(assignmentsStateProvider);
-    final assignment = state.assignments.where(
-      (a) => a.id == widget.assignmentId,
-    ).firstOrNull;
+    final assignment = state.assignments
+        .where((a) => a.id == widget.assignmentId)
+        .firstOrNull;
 
     if (assignment != null) {
       ref.read(assignmentsStateProvider.notifier).selectAssignment(assignment);
@@ -65,9 +63,9 @@ class _TeacherAssignmentDetailScreenState
         ref.read(assignmentsStateProvider.notifier).clearMessages();
       }
       if (next.selectedAssignment == null && next.assignments.isNotEmpty) {
-        final assignment = next.assignments.where(
-          (a) => a.id == widget.assignmentId,
-        ).firstOrNull;
+        final assignment = next.assignments
+            .where((a) => a.id == widget.assignmentId)
+            .firstOrNull;
         if (assignment != null) {
           ref
               .read(assignmentsStateProvider.notifier)
@@ -77,14 +75,14 @@ class _TeacherAssignmentDetailScreenState
     });
 
     final state = ref.watch(assignmentsStateProvider);
-    final assignment = state.assignments.where(
-      (a) => a.id == widget.assignmentId,
-    ).firstOrNull;
+    final assignment = state.assignments
+        .where((a) => a.id == widget.assignmentId)
+        .firstOrNull;
 
     if (assignment == null && state.isLoading) {
       return Scaffold(
         appBar: AppBar(title: const Text('Assignment')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const ListSkeletonLoader(),
       );
     }
 
@@ -104,16 +102,24 @@ class _TeacherAssignmentDetailScreenState
           children: [
             _assignmentInfo(context, assignment),
             const SizedBox(height: 16),
-            Text('Student Submissions',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Student Submissions',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 12),
             if (state.isLoading)
-              const Center(child: CircularProgressIndicator())
+              const ListSkeletonLoader(
+                scrollable: false,
+                padding: 0,
+                itemCount: 2,
+              )
             else if (state.submissions.isEmpty)
               GlassCard(
                 child: Center(
-                  child: Text('No students found for this assignment',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  child: Text(
+                    'No students found for this assignment',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
               )
             else ...[
@@ -121,8 +127,9 @@ class _TeacherAssignmentDetailScreenState
               const SizedBox(height: 16),
               CustomButton(
                 label: 'Save All Changes',
-                onPressed: () =>
-                    ref.read(assignmentsStateProvider.notifier).saveSubmissions(),
+                onPressed: () => ref
+                    .read(assignmentsStateProvider.notifier)
+                    .saveSubmissions(),
                 loading: state.isSubmitting,
                 width: double.infinity,
               ),
@@ -138,40 +145,59 @@ class _TeacherAssignmentDetailScreenState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(assignment.title,
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(assignment.title, style: Theme.of(context).textTheme.titleLarge),
           if (assignment.description != null &&
               assignment.description!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(assignment.description!,
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              assignment.description!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.class_rounded, size: 16, color: AppColors.textSecondary),
+              Icon(
+                Icons.class_rounded,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 6),
-              Text(assignment.classDisplay,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                assignment.classDisplay,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.book_rounded, size: 16, color: AppColors.textSecondary),
+              Icon(
+                Icons.book_rounded,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 6),
-              Text(assignment.subjectName,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                assignment.subjectName,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
           if (assignment.dueDate != null) ...[
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
-                Text('Due: ${assignment.dueDate}',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  'Due: ${assignment.dueDate}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ],
@@ -185,7 +211,8 @@ class _TeacherAssignmentDetailScreenState
       children: state.submissions.asMap().entries.map((entry) {
         final i = entry.key;
         final submission = entry.value;
-        final status = state.statuses[submission.studentId] ?? submission.status;
+        final status =
+            state.statuses[submission.studentId] ?? submission.status;
         final remarks = state.remarks[submission.studentId] ?? '';
 
         return Padding(
@@ -198,21 +225,24 @@ class _TeacherAssignmentDetailScreenState
                   children: [
                     Text(
                       '${i + 1}.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(submission.studentName,
-                              style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            submission.studentName,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           if (submission.rollNumber != null)
-                            Text('Roll: ${submission.rollNumber}',
-                                style: Theme.of(context).textTheme.bodyMedium),
+                            Text(
+                              'Roll: ${submission.rollNumber}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                         ],
                       ),
                     ),

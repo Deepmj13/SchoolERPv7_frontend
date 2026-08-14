@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_teacher/core/theme/app_colors.dart';
 import 'package:school_erp_teacher/core/widgets/glass_card.dart';
+import 'package:school_erp_teacher/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_teacher/features/teacher/domain/teacher_models.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/providers/teacher_notices_provider.dart';
 
@@ -13,8 +14,7 @@ class TeacherNoticesScreen extends ConsumerStatefulWidget {
       _TeacherNoticesScreenState();
 }
 
-class _TeacherNoticesScreenState
-    extends ConsumerState<TeacherNoticesScreen> {
+class _TeacherNoticesScreenState extends ConsumerState<TeacherNoticesScreen> {
   @override
   void initState() {
     super.initState();
@@ -30,11 +30,12 @@ class _TeacherNoticesScreenState
     return Scaffold(
       appBar: AppBar(title: const Text('Notices')),
       body: noticesAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const ListSkeletonLoader(),
         error: (e, _) => Center(
-          child: Text('Failed to load: $e',
-              style: const TextStyle(color: AppColors.error)),
+          child: Text(
+            'Failed to load: $e',
+            style: const TextStyle(color: AppColors.error),
+          ),
         ),
         data: (notices) {
           if (notices.isEmpty) {
@@ -44,10 +45,12 @@ class _TeacherNoticesScreenState
             padding: const EdgeInsets.all(24),
             child: ListView(
               children: notices
-                  .map((n) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _noticeCard(context, n),
-                      ))
+                  .map(
+                    (n) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _noticeCard(context, n),
+                    ),
+                  )
                   .toList(),
             ),
           );
@@ -87,7 +90,9 @@ class _TeacherNoticesScreenState
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: notice.isSchoolWide
                         ? AppColors.primary.withValues(alpha: 0.1)
@@ -108,35 +113,47 @@ class _TeacherNoticesScreenState
               ],
             ),
             const SizedBox(height: 12),
-            Text(notice.title,
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(notice.title, style: Theme.of(context).textTheme.titleLarge),
             if (notice.body != null && notice.body!.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text(notice.body!,
-                  style: Theme.of(context).textTheme.bodyLarge),
+              Text(notice.body!, style: Theme.of(context).textTheme.bodyLarge),
             ],
             const SizedBox(height: 16),
             if (notice.createdByEmail != null) ...[
               Row(
                 children: [
-                  Icon(Icons.person_outline,
-                      size: 14, color: AppColors.textSecondary),
+                  Icon(
+                    Icons.person_outline,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 6),
-                  Text(notice.createdByEmail!,
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary)),
+                  Text(
+                    notice.createdByEmail!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 4),
             ],
             Row(
               children: [
-                Icon(Icons.calendar_today,
-                    size: 14, color: AppColors.textSecondary),
+                Icon(
+                  Icons.calendar_today,
+                  size: 14,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
-                Text(_formatDate(notice.createdAt),
-                    style: const TextStyle(
-                        fontSize: 12, color: AppColors.textSecondary)),
+                Text(
+                  _formatDate(notice.createdAt),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ),
           ],
@@ -154,8 +171,7 @@ class _TeacherNoticesScreenState
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: notice.isSchoolWide
                       ? AppColors.primary.withValues(alpha: 0.1)
@@ -176,22 +192,22 @@ class _TeacherNoticesScreenState
             ],
           ),
           const SizedBox(height: 8),
-          Text(notice.title,
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(notice.title, style: Theme.of(context).textTheme.titleMedium),
           if (notice.body != null && notice.body!.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Text(notice.body!,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              notice.body!,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
           const SizedBox(height: 8),
           Text(
             _formatDate(notice.createdAt),
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontSize: 12),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
           ),
         ],
       ),

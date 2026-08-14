@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
+import 'package:school_erp_student/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_remarks_provider.dart';
 
@@ -17,17 +18,18 @@ class StudentRemarksScreen extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
-            onPressed: () => ref.read(studentRemarksProvider.notifier).refresh(),
+            onPressed: () =>
+                ref.read(studentRemarksProvider.notifier).refresh(),
           ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: state.isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? const ListSkeletonLoader(scrollable: false, padding: 0)
             : state.remarks.isEmpty
-                ? _emptyState(context)
-                : _remarksList(context, ref, state),
+            ? _emptyState(context)
+            : _remarksList(context, ref, state),
       ),
     );
   }
@@ -37,12 +39,21 @@ class StudentRemarksScreen extends ConsumerWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.rate_review_outlined, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.5)),
+          Icon(
+            Icons.rate_review_outlined,
+            size: 64,
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
-          Text('No remarks yet', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'No remarks yet',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text('Teachers will send you praise and feedback here',
-              style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            'Teachers will send you praise and feedback here',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );
@@ -60,18 +71,24 @@ class StudentRemarksScreen extends ConsumerWidget {
           onTap: () => _showRemarkDetailSheet(context, ref, remark),
           child: Container(
             decoration: BoxDecoration(
-              color: remark.isRead ? null : AppColors.primary.withValues(alpha: 0.03),
+              color: remark.isRead
+                  ? null
+                  : AppColors.primary.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
               border: remark.isRead
                   ? null
-                  : Border.all(color: AppColors.primary.withValues(alpha: 0.15)),
+                  : Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                    ),
             ),
             child: Card(
               elevation: 0,
               color: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.glassDark
                   : AppColors.glassLight,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -83,13 +100,20 @@ class StudentRemarksScreen extends ConsumerWidget {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: (isPraise ? AppColors.success : AppColors.warning)
-                                .withValues(alpha: 0.15),
+                            color:
+                                (isPraise
+                                        ? AppColors.success
+                                        : AppColors.warning)
+                                    .withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
-                            isPraise ? Icons.thumb_up_rounded : Icons.warning_amber_rounded,
-                            color: isPraise ? AppColors.success : AppColors.warning,
+                            isPraise
+                                ? Icons.thumb_up_rounded
+                                : Icons.warning_amber_rounded,
+                            color: isPraise
+                                ? AppColors.success
+                                : AppColors.warning,
                             size: 22,
                           ),
                         ),
@@ -101,10 +125,16 @@ class StudentRemarksScreen extends ConsumerWidget {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 3,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: (isPraise ? AppColors.success : AppColors.warning)
-                                          .withValues(alpha: 0.15),
+                                      color:
+                                          (isPraise
+                                                  ? AppColors.success
+                                                  : AppColors.warning)
+                                              .withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
@@ -112,15 +142,21 @@ class StudentRemarksScreen extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
-                                        color: isPraise ? AppColors.success : AppColors.warning,
+                                        color: isPraise
+                                            ? AppColors.success
+                                            : AppColors.warning,
                                       ),
                                     ),
                                   ),
                                   if (remark.category != null) ...[
                                     const SizedBox(width: 6),
-                                    Text('#${remark.category}',
-                                        style: const TextStyle(
-                                            fontSize: 12, color: AppColors.textSecondary)),
+                                    Text(
+                                      '#${remark.category}',
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
                                   ],
                                   const Spacer(),
                                   if (!remark.isRead)
@@ -136,11 +172,14 @@ class StudentRemarksScreen extends ConsumerWidget {
                               ),
                               if (remark.teacherName != null) ...[
                                 const SizedBox(height: 4),
-                                Text(remark.teacherName!,
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: AppColors.textSecondary)),
+                                Text(
+                                  remark.teacherName!,
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
                               ],
                             ],
                           ),
@@ -148,17 +187,36 @@ class StudentRemarksScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(remark.message, style: const TextStyle(fontSize: 14, height: 1.4),
-                        maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(
+                      remark.message,
+                      style: const TextStyle(fontSize: 14, height: 1.4),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        Text(_formatDate(remark.createdAt),
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text(
+                          _formatDate(remark.createdAt),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                         const Spacer(),
-                        const Icon(Icons.open_in_new, size: 14, color: AppColors.textSecondary),
+                        const Icon(
+                          Icons.open_in_new,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
                         const SizedBox(width: 4),
-                        const Text('Tap to view', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        const Text(
+                          'Tap to view',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -171,7 +229,11 @@ class StudentRemarksScreen extends ConsumerWidget {
     );
   }
 
-  void _showRemarkDetailSheet(BuildContext context, WidgetRef ref, StudentRemark remark) {
+  void _showRemarkDetailSheet(
+    BuildContext context,
+    WidgetRef ref,
+    StudentRemark remark,
+  ) {
     if (!remark.isRead) {
       ref.read(studentRemarksProvider.notifier).markAsRead(remark.id);
     }
@@ -210,11 +272,14 @@ class StudentRemarksScreen extends ConsumerWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: (isPraise ? AppColors.success : AppColors.warning).withValues(alpha: 0.15),
+                      color: (isPraise ? AppColors.success : AppColors.warning)
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      isPraise ? Icons.thumb_up_rounded : Icons.warning_amber_rounded,
+                      isPraise
+                          ? Icons.thumb_up_rounded
+                          : Icons.warning_amber_rounded,
                       color: isPraise ? AppColors.success : AppColors.warning,
                       size: 24,
                     ),
@@ -227,9 +292,16 @@ class StudentRemarksScreen extends ConsumerWidget {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
-                                color: (isPraise ? AppColors.success : AppColors.warning).withValues(alpha: 0.15),
+                                color:
+                                    (isPraise
+                                            ? AppColors.success
+                                            : AppColors.warning)
+                                        .withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
@@ -237,21 +309,31 @@ class StudentRemarksScreen extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: isPraise ? AppColors.success : AppColors.warning,
+                                  color: isPraise
+                                      ? AppColors.success
+                                      : AppColors.warning,
                                 ),
                               ),
                             ),
                             if (remark.category != null) ...[
                               const SizedBox(width: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.1),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   remark.category!,
-                                  style: const TextStyle(fontSize: 11, color: AppColors.primary),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ],
@@ -259,8 +341,14 @@ class StudentRemarksScreen extends ConsumerWidget {
                         ),
                         if (remark.teacherName != null) ...[
                           const SizedBox(height: 4),
-                          Text(remark.teacherName!,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
+                          Text(
+                            remark.teacherName!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -270,15 +358,28 @@ class StudentRemarksScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  const Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
-                  Text(_formatDate(remark.createdAt), style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                  Text(
+                    _formatDate(remark.createdAt),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
               const Divider(),
               const SizedBox(height: 8),
-              Text(remark.message, style: Theme.of(context).textTheme.bodyLarge),
+              Text(
+                remark.message,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
             ],
           ),
         );
@@ -289,7 +390,20 @@ class StudentRemarksScreen extends ConsumerWidget {
   String _formatDate(String iso) {
     try {
       final dt = DateTime.parse(iso);
-      final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      final months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
       return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
     } catch (_) {
       return iso;

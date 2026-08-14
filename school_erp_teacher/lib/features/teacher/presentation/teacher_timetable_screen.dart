@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_teacher/core/theme/app_colors.dart';
 import 'package:school_erp_teacher/core/widgets/glass_card.dart';
+import 'package:school_erp_teacher/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_teacher/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_teacher/features/teacher/domain/teacher_models.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/providers/teacher_proxy_provider.dart';
@@ -60,15 +61,18 @@ final selectedDayProvider = StateProvider<String>((ref) {
   return _dayForDate(DateTime.now());
 });
 
-final teacherTimetableProvider =
-    FutureProvider<List<TimetableEntry>>((ref) async {
+final teacherTimetableProvider = FutureProvider<List<TimetableEntry>>((
+  ref,
+) async {
   final teacherId = ref.watch(authStateProvider).user?.teacherId ?? '';
   if (teacherId.isEmpty) return Future.value([]);
   final repo = ref.watch(teacherRepositoryProvider);
   final selectedDay = ref.watch(selectedDayProvider);
   final now = DateTime.now();
-  return repo.getTeacherTimetable(teacherId,
-      date: _dateStrForDay(selectedDay, now));
+  return repo.getTeacherTimetable(
+    teacherId,
+    date: _dateStrForDay(selectedDay, now),
+  );
 });
 
 class TeacherTimetableScreen extends ConsumerStatefulWidget {
@@ -79,7 +83,8 @@ class TeacherTimetableScreen extends ConsumerStatefulWidget {
       _TeacherTimetableScreenState();
 }
 
-class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen> {
+class _TeacherTimetableScreenState
+    extends ConsumerState<TeacherTimetableScreen> {
   @override
   Widget build(BuildContext context) {
     final timetableAsync = ref.watch(teacherTimetableProvider);
@@ -87,10 +92,12 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     return Scaffold(
       appBar: AppBar(title: const Text('My Timetable')),
       body: timetableAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ListSkeletonLoader(),
         error: (e, _) => Center(
-          child: Text('Failed to load timetable: $e',
-              style: const TextStyle(color: AppColors.error)),
+          child: Text(
+            'Failed to load timetable: $e',
+            style: const TextStyle(color: AppColors.error),
+          ),
         ),
         data: (entries) {
           if (entries.isEmpty) {
@@ -101,13 +108,16 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.calendar_month,
-                          size: 48,
-                          color:
-                              AppColors.textSecondary.withValues(alpha: 0.5)),
+                      Icon(
+                        Icons.calendar_month,
+                        size: 48,
+                        color: AppColors.textSecondary.withValues(alpha: 0.5),
+                      ),
                       const SizedBox(height: 12),
-                      Text('No timetable entries found',
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        'No timetable entries found',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -120,8 +130,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  Widget _buildTimetable(
-      BuildContext context, List<TimetableEntry> entries) {
+  Widget _buildTimetable(BuildContext context, List<TimetableEntry> entries) {
     final grouped = <String, List<TimetableEntry>>{};
     for (final day in _days) {
       grouped[day] = entries.where((e) => e.day == day).toList();
@@ -152,12 +161,16 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.event_busy,
-                          size: 40,
-                          color: AppColors.textSecondary.withValues(alpha: 0.5)),
+                      Icon(
+                        Icons.event_busy,
+                        size: 40,
+                        color: AppColors.textSecondary.withValues(alpha: 0.5),
+                      ),
                       const SizedBox(height: 12),
-                      Text('No classes scheduled',
-                          style: Theme.of(context).textTheme.bodyMedium),
+                      Text(
+                        'No classes scheduled',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
                     ],
                   ),
                 ),
@@ -184,10 +197,11 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color:
-                                AppColors.primary.withValues(alpha: 0.15),
+                            color: AppColors.primary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(
@@ -203,10 +217,11 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
-                            color:
-                                AppColors.info.withValues(alpha: 0.15),
+                            color: AppColors.info.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Text(
@@ -224,8 +239,13 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                   const SizedBox(height: 12),
                   ...dayEntries.map(
                     (e) => _entryCard(
-                        context, e, isToday, isTomorrow, canProxyDay,
-                        date: selectedDate),
+                      context,
+                      e,
+                      isToday,
+                      isTomorrow,
+                      canProxyDay,
+                      date: selectedDate,
+                    ),
                   ),
                 ],
               ),
@@ -286,19 +306,16 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                 selectedColor: AppColors.primary,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : null,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                backgroundColor: Theme.of(context).brightness ==
-                        Brightness.dark
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
                     ? AppColors.glassDark
                     : Colors.grey.shade100,
                 side: BorderSide.none,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
               ),
             );
           }).toList(),
@@ -307,25 +324,28 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  Widget _entryCard(BuildContext context, TimetableEntry entry, bool isToday,
-      bool isTomorrow, bool canProxyDay,
-      {required String date}) {
+  Widget _entryCard(
+    BuildContext context,
+    TimetableEntry entry,
+    bool isToday,
+    bool isTomorrow,
+    bool canProxyDay, {
+    required String date,
+  }) {
     final now = DateTime.now();
     final currentMinutes = now.hour * 60 + now.minute;
     final startParts = entry.startTime.split(':');
     final endParts = entry.endTime.split(':');
-    final startMin =
-        int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+    final startMin = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
     final endMin = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
     final isOngoing =
         isToday && currentMinutes >= startMin && currentMinutes <= endMin;
-    final isCompleted =
-        isToday && currentMinutes > endMin;
+    final isCompleted = isToday && currentMinutes > endMin;
     final color = _colorForSubject(entry.subjectId);
 
-    final teacherId =
-        ref.read(authStateProvider).user?.teacherId ?? '';
-    final canProxy = canProxyDay &&
+    final teacherId = ref.read(authStateProvider).user?.teacherId ?? '';
+    final canProxy =
+        canProxyDay &&
         !entry.hasProxy &&
         !isCompleted &&
         (entry.originalTeacherId == null ||
@@ -335,8 +355,7 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
       padding: const EdgeInsets.only(bottom: 8),
       child: GestureDetector(
         onLongPress: canProxy
-            ? () =>
-                _showProxyContextMenu(context, ref, entry, date: date)
+            ? () => _showProxyContextMenu(context, ref, entry, date: date)
             : null,
         child: GlassCard(
           child: Row(
@@ -358,8 +377,11 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                         color: AppColors.success.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.play_arrow_rounded,
-                          color: AppColors.success, size: 20),
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
+                        color: AppColors.success,
+                        size: 20,
+                      ),
                     )
                   : Container(
                       width: 36,
@@ -368,8 +390,11 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                         color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.menu_book_rounded,
-                          color: color, size: 18),
+                      child: Icon(
+                        Icons.menu_book_rounded,
+                        color: color,
+                        size: 18,
+                      ),
                     ),
               const SizedBox(width: 12),
               Expanded(
@@ -390,10 +415,11 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.warning
-                                  .withValues(alpha: 0.15),
+                              color: AppColors.warning.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Text(
@@ -420,8 +446,10 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
               ),
               if (isOngoing)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
@@ -431,11 +459,14 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                     children: [
                       Icon(Icons.circle, size: 6, color: AppColors.success),
                       SizedBox(width: 4),
-                      Text('Now',
-                          style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w600)),
+                      Text(
+                        'Now',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -446,9 +477,12 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  void _showProxyContextMenu(BuildContext context, WidgetRef ref,
-      TimetableEntry entry,
-      {required String date}) {
+  void _showProxyContextMenu(
+    BuildContext context,
+    WidgetRef ref,
+    TimetableEntry entry, {
+    required String date,
+  }) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -470,8 +504,10 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.swap_horiz_rounded,
-                    color: AppColors.primary),
+                leading: const Icon(
+                  Icons.swap_horiz_rounded,
+                  color: AppColors.primary,
+                ),
                 title: const Text('Assign Proxy'),
                 subtitle: Text(
                   '${entry.subjectName ?? "Lecture"} - ${entry.classDisplay}',
@@ -489,12 +525,17 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
     );
   }
 
-  void _showAssignProxySheet(BuildContext context, WidgetRef ref,
-      TimetableEntry entry,
-      {required String date}) {
+  void _showAssignProxySheet(
+    BuildContext context,
+    WidgetRef ref,
+    TimetableEntry entry, {
+    required String date,
+  }) {
     final repo = ref.read(teacherRepositoryProvider);
-    final availableTeachersFuture =
-        repo.getAvailableTeachers(entry.id, date: date);
+    final availableTeachersFuture = repo.getAvailableTeachers(
+      entry.id,
+      date: date,
+    );
     String? selectedTeacherId;
     final reasonCtrl = TextEditingController();
     bool saving = false;
@@ -532,49 +573,51 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                 const SizedBox(height: 20),
                 Text(
                   'Assign Proxy',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '${entry.subjectName ?? "Lecture"} - ${entry.classDisplay}',
                   style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 13),
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   '$date  |  ${entry.startTime} - ${entry.endTime}',
                   style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 12),
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: availableTeachersFuture,
                   builder: (ctx, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Padding(
                         padding: EdgeInsets.symmetric(vertical: 16),
                         child: Center(
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2)),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       );
                     }
                     if (snapshot.hasError ||
                         snapshot.data == null ||
                         snapshot.data!.isEmpty) {
                       return Padding(
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           snapshot.hasError
                               ? 'Failed to load teachers'
                               : 'No available teachers for this slot',
                           style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary),
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       );
                     }
@@ -586,10 +629,12 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                         prefixIcon: Icon(Icons.person),
                       ),
                       items: teachers
-                          .map((t) => DropdownMenuItem(
-                                value: t['id'] as String,
-                                child: Text(t['full_name'] as String),
-                              ))
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t['id'] as String,
+                              child: Text(t['full_name'] as String),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) {
                         if (v != null) {
@@ -634,32 +679,22 @@ class _TeacherTimetableScreenState extends ConsumerState<TeacherTimetableScreen>
                                 );
                             if (ctx.mounted) {
                               if (success) {
-                                ref.invalidate(
-                                    teacherTimetableProvider);
+                                ref.invalidate(teacherTimetableProvider);
                                 Navigator.pop(ctx);
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
+                                ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content:
-                                        Text('Proxy request sent'),
-                                    backgroundColor:
-                                        AppColors.success,
-                                    behavior:
-                                        SnackBarBehavior.floating,
+                                    content: Text('Proxy request sent'),
+                                    backgroundColor: AppColors.success,
+                                    behavior: SnackBarBehavior.floating,
                                   ),
                                 );
                               } else {
-                                setSheetState(
-                                    () => saving = false);
-                                ScaffoldMessenger.of(ctx)
-                                    .showSnackBar(
+                                setSheetState(() => saving = false);
+                                ScaffoldMessenger.of(ctx).showSnackBar(
                                   const SnackBar(
-                                    content: Text(
-                                        'Failed to assign proxy'),
-                                    backgroundColor:
-                                        AppColors.error,
-                                    behavior:
-                                        SnackBarBehavior.floating,
+                                    content: Text('Failed to assign proxy'),
+                                    backgroundColor: AppColors.error,
+                                    behavior: SnackBarBehavior.floating,
                                   ),
                                 );
                               }

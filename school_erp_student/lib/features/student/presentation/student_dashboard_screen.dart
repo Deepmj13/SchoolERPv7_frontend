@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
+import 'package:school_erp_student/core/widgets/dashboard_skeleton_loader.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_dashboard_provider.dart';
@@ -14,25 +15,24 @@ class StudentDashboardScreen extends ConsumerWidget {
     final dashboardAsync = ref.watch(studentDashboardProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
+      appBar: AppBar(title: const Text('Dashboard')),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: dashboardAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator()),
+          loading: () => const DashboardSkeletonLoader(),
           error: (e, _) => Center(
-              child: Text('Failed to load: $e',
-                  style: const TextStyle(color: AppColors.error))),
+            child: Text(
+              'Failed to load: $e',
+              style: const TextStyle(color: AppColors.error),
+            ),
+          ),
           data: (data) => _buildContent(context, data),
         ),
       ),
     );
   }
 
-  Widget _buildContent(
-      BuildContext context, DashboardData data) {
+  Widget _buildContent(BuildContext context, DashboardData data) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,14 +59,13 @@ class StudentDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _attendanceCard(
-      BuildContext context, AttendanceSummary summary) {
+  Widget _attendanceCard(BuildContext context, AttendanceSummary summary) {
     final percentage = summary.percentage;
     final color = percentage >= 75
         ? AppColors.success
         : percentage >= 60
-            ? AppColors.warning
-            : AppColors.error;
+        ? AppColors.warning
+        : AppColors.error;
 
     return GlassCard(
       child: Row(
@@ -84,8 +83,10 @@ class StudentDashboardScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Overall Attendance',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Overall Attendance',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'Present: ${summary.present} / ${summary.total} days',
@@ -103,8 +104,7 @@ class StudentDashboardScreen extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Quick Links',
-            style: Theme.of(context).textTheme.titleLarge),
+        Text('Quick Links', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -113,11 +113,16 @@ class StudentDashboardScreen extends ConsumerWidget {
                 onTap: () => context.go('/student/notices'),
                 child: Column(
                   children: [
-                    const Icon(Icons.campaign_rounded,
-                        color: AppColors.warning, size: 32),
+                    const Icon(
+                      Icons.campaign_rounded,
+                      color: AppColors.warning,
+                      size: 32,
+                    ),
                     const SizedBox(height: 8),
-                    Text('Notices',
-                        style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      'Notices',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ],
                 ),
               ),
@@ -128,11 +133,16 @@ class StudentDashboardScreen extends ConsumerWidget {
                 onTap: () => context.go('/student/assignments'),
                 child: Column(
                   children: [
-                    const Icon(Icons.book_rounded,
-                        color: AppColors.primary, size: 32),
+                    const Icon(
+                      Icons.book_rounded,
+                      color: AppColors.primary,
+                      size: 32,
+                    ),
                     const SizedBox(height: 8),
-                    Text('Assignments',
-                        style: Theme.of(context).textTheme.bodyMedium),
+                    Text(
+                      'Assignments',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ],
                 ),
               ),
@@ -143,13 +153,11 @@ class StudentDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _noticesSection(
-      BuildContext context, List<Notice> notices) {
+  Widget _noticesSection(BuildContext context, List<Notice> notices) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Latest Notices',
-            style: Theme.of(context).textTheme.titleLarge),
+        Text('Latest Notices', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         ...notices.map(
           (notice) => Padding(
@@ -170,12 +178,14 @@ class StudentDashboardScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(notice.title,
-                            style:
-                                Theme.of(context).textTheme.titleMedium),
-                        Text(notice.createdAt,
-                            style:
-                                Theme.of(context).textTheme.bodyMedium),
+                        Text(
+                          notice.title,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Text(
+                          notice.createdAt,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ],
                     ),
                   ),

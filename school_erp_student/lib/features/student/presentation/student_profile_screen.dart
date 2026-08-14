@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/core/widgets/change_password_dialog.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
+import 'package:school_erp_student/core/widgets/profile_skeleton_loader.dart';
 import 'package:school_erp_student/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_profile_provider.dart';
 
@@ -29,11 +30,13 @@ class StudentProfileScreen extends ConsumerWidget {
         ],
       ),
       body: profileAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const ProfileSkeletonLoader(padding: 24),
         error: (e, _) => Center(
-            child: Text('Failed to load: $e',
-                style: const TextStyle(color: AppColors.error))),
+          child: Text(
+            'Failed to load: $e',
+            style: const TextStyle(color: AppColors.error),
+          ),
+        ),
         data: (profile) => Padding(
           padding: const EdgeInsets.all(24),
           child: SingleChildScrollView(
@@ -41,43 +44,66 @@ class StudentProfileScreen extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 48,
-                  backgroundColor:
-                      AppColors.primary.withValues(alpha: 0.1),
-                  child: const Icon(Icons.person_rounded,
-                      size: 48, color: AppColors.primary),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    size: 48,
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(height: 16),
-                Text(profile.fullName,
-                    style: Theme.of(context).textTheme.headlineMedium),
+                Text(
+                  profile.fullName,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
                 if (profile.email != null) ...[
                   const SizedBox(height: 4),
-                  Text(profile.email!,
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    profile.email!,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
                 const SizedBox(height: 24),
                 GlassCard(
                   child: Column(
                     children: [
                       _profileRow(
-                          context,
-                          Icons.badge_outlined,
-                          'Roll No',
-                          profile.rollNumber ?? 'N/A'),
+                        context,
+                        Icons.badge_outlined,
+                        'Roll No',
+                        profile.rollNumber ?? 'N/A',
+                      ),
                       const Divider(height: 1),
-                      _profileRow(context, Icons.school_outlined, 'Class',
-                          profile.className ?? 'N/A'),
+                      _profileRow(
+                        context,
+                        Icons.school_outlined,
+                        'Class',
+                        profile.className ?? 'N/A',
+                      ),
                       const Divider(height: 1),
-                      _profileRow(context, Icons.group_outlined, 'Section',
-                          profile.classSection ?? 'N/A'),
+                      _profileRow(
+                        context,
+                        Icons.group_outlined,
+                        'Section',
+                        profile.classSection ?? 'N/A',
+                      ),
                       if (profile.parentName != null) ...[
                         const Divider(height: 1),
-                        _profileRow(context, Icons.people_outlined,
-                            'Parent', profile.parentName!),
+                        _profileRow(
+                          context,
+                          Icons.people_outlined,
+                          'Parent',
+                          profile.parentName!,
+                        ),
                       ],
                       if (profile.parentPhone != null) ...[
                         const Divider(height: 1),
-                        _profileRow(context, Icons.phone_outlined, 'Contact',
-                            profile.parentPhone!),
+                        _profileRow(
+                          context,
+                          Icons.phone_outlined,
+                          'Contact',
+                          profile.parentPhone!,
+                        ),
                       ],
                     ],
                   ),
@@ -85,7 +111,10 @@ class StudentProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
                 GlassCard(
                   child: ListTile(
-                    leading: const Icon(Icons.lock_outline, color: AppColors.primary),
+                    leading: const Icon(
+                      Icons.lock_outline,
+                      color: AppColors.primary,
+                    ),
                     title: const Text('Change Password'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
@@ -105,8 +134,10 @@ class StudentProfileScreen extends ConsumerWidget {
                       context.go('/login');
                     },
                     icon: const Icon(Icons.logout, color: AppColors.error),
-                    label: const Text('Logout',
-                        style: TextStyle(color: AppColors.error)),
+                    label: const Text(
+                      'Logout',
+                      style: TextStyle(color: AppColors.error),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.error),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -125,7 +156,11 @@ class StudentProfileScreen extends ConsumerWidget {
   }
 
   Widget _profileRow(
-      BuildContext context, IconData icon, String label, String value) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -133,14 +168,14 @@ class StudentProfileScreen extends ConsumerWidget {
           Icon(icon, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(label,
-                style: Theme.of(context).textTheme.bodyMedium),
+            child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
           ),
-          Text(value,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );

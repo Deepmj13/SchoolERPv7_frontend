@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:school_erp_teacher/core/theme/app_colors.dart';
 import 'package:school_erp_teacher/core/widgets/custom_button.dart';
 import 'package:school_erp_teacher/core/widgets/glass_card.dart';
+import 'package:school_erp_teacher/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_teacher/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_teacher/features/teacher/domain/teacher_models.dart';
 import 'package:school_erp_teacher/features/teacher/presentation/providers/teacher_assignments_provider.dart';
@@ -62,20 +63,22 @@ class _TeacherAssignmentsScreenState
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeletonLoader()
           : state.assignments.isEmpty
-              ? const Center(child: Text('No assignments yet'))
-              : Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: ListView(
-                    children: state.assignments
-                        .map((a) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: _assignmentCard(context, a),
-                            ))
-                        .toList(),
-                  ),
-                ),
+          ? const Center(child: Text('No assignments yet'))
+          : Padding(
+              padding: const EdgeInsets.all(24),
+              child: ListView(
+                children: state.assignments
+                    .map(
+                      (a) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _assignmentCard(context, a),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
     );
   }
 
@@ -89,8 +92,10 @@ class _TeacherAssignmentsScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(assignment.title,
-                    style: Theme.of(context).textTheme.titleMedium),
+                child: Text(
+                  assignment.title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
@@ -98,29 +103,47 @@ class _TeacherAssignmentsScreenState
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.class_rounded, size: 16, color: AppColors.textSecondary),
+              Icon(
+                Icons.class_rounded,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 4),
-              Text(assignment.classDisplay,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                assignment.classDisplay,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
           const SizedBox(height: 4),
           Row(
             children: [
-              Icon(Icons.book_rounded, size: 16, color: AppColors.textSecondary),
+              Icon(
+                Icons.book_rounded,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 4),
-              Text(assignment.subjectName,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                assignment.subjectName,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
           if (assignment.dueDate != null) ...[
             const SizedBox(height: 4),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 4),
-                Text('Due: ${assignment.dueDate}',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  'Due: ${assignment.dueDate}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ],
@@ -196,8 +219,10 @@ class _CreateAssignmentSheetState
                 ),
               ),
             ),
-            Text('Create Assignment',
-                style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Create Assignment',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _titleController,
@@ -225,15 +250,13 @@ class _CreateAssignmentSheetState
                     prefixIcon: Icon(Icons.school),
                   ),
                   items: classes
-                      .map((c) => DropdownMenuItem(
-                            value: c,
-                            child: Text(c.display),
-                          ))
+                      .map(
+                        (c) =>
+                            DropdownMenuItem(value: c, child: Text(c.display)),
+                      )
                       .toList(),
-                  onChanged: (cls) =>
-                      setState(() => _selectedClass = cls),
-                  validator: (v) =>
-                      v == null ? 'Please select a class' : null,
+                  onChanged: (cls) => setState(() => _selectedClass = cls),
+                  validator: (v) => v == null ? 'Please select a class' : null,
                 );
               },
             ),
@@ -282,7 +305,9 @@ class _CreateAssignmentSheetState
 
     setState(() => _isSubmitting = true);
     try {
-      await ref.read(teacherRepositoryProvider).createAssignment(
+      await ref
+          .read(teacherRepositoryProvider)
+          .createAssignment(
             _titleController.text.trim(),
             _descriptionController.text.trim().isEmpty
                 ? null
@@ -296,9 +321,7 @@ class _CreateAssignmentSheetState
       if (mounted) {
         Navigator.pop(context);
         final teacherId = ref.read(authStateProvider).user?.teacherId ?? '';
-        ref
-            .read(assignmentsStateProvider.notifier)
-            .loadAssignments(teacherId);
+        ref.read(assignmentsStateProvider.notifier).loadAssignments(teacherId);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Assignment created!'),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:school_erp_teacher/core/theme/app_colors.dart';
+import 'package:school_erp_teacher/core/widgets/dashboard_skeleton_loader.dart';
 import 'package:school_erp_teacher/core/widgets/glass_card.dart';
 import 'package:school_erp_teacher/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:school_erp_teacher/features/teacher/data/teacher_repository.dart';
@@ -13,8 +14,7 @@ final teacherRepositoryProvider = Provider<TeacherRepository>((ref) {
   return TeacherRepository(api);
 });
 
-final teacherDashboardProvider =
-    FutureProvider<DashboardData>((ref) async {
+final teacherDashboardProvider = FutureProvider<DashboardData>((ref) async {
   final repo = ref.watch(teacherRepositoryProvider);
   final authState = ref.watch(authStateProvider);
   final teacherId = authState.user?.teacherId ?? '';
@@ -60,25 +60,32 @@ class TeacherDashboardScreen extends ConsumerWidget {
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: dashboardAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator()),
+          loading: () => const DashboardSkeletonLoader(),
           error: (e, _) => Center(
-              child: Text('Failed to load: $e',
-                  style: const TextStyle(color: AppColors.error))),
+            child: Text(
+              'Failed to load: $e',
+              style: const TextStyle(color: AppColors.error),
+            ),
+          ),
           data: (data) => _buildContent(context, ref, data),
         ),
       ),
     );
   }
 
-  Widget _buildContent(BuildContext context, WidgetRef ref,
-      DashboardData data) {
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref,
+    DashboardData data,
+  ) {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            data.teacherName.isNotEmpty ? 'Welcome, ${data.teacherName}' : 'Welcome',
+            data.teacherName.isNotEmpty
+                ? 'Welcome, ${data.teacherName}'
+                : 'Welcome',
             style: Theme.of(context).textTheme.headlineLarge,
           ),
           const SizedBox(height: 8),
@@ -87,7 +94,12 @@ class TeacherDashboardScreen extends ConsumerWidget {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
-          _quickAttendanceCard(context, ref, data.todaySchedule, data.assignedClasses),
+          _quickAttendanceCard(
+            context,
+            ref,
+            data.todaySchedule,
+            data.assignedClasses,
+          ),
           const SizedBox(height: 24),
           if (data.classTeacherClass != null)
             _classTeacherClass(context, data.classTeacherClass!),
@@ -118,11 +130,14 @@ Widget _classTeacherClass(BuildContext context, ClassModel cls) {
             children: [
               Icon(Icons.star_rounded, color: AppColors.primary, size: 18),
               SizedBox(width: 4),
-              Text('Class Teacher',
-                  style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600)),
+              Text(
+                'Class Teacher',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ],
           ),
         ),
@@ -131,10 +146,11 @@ Widget _classTeacherClass(BuildContext context, ClassModel cls) {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(cls.display,
-                  style: Theme.of(context).textTheme.titleMedium),
-              Text('${cls.studentCount} students',
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(cls.display, style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                '${cls.studentCount} students',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
         ),
@@ -155,8 +171,11 @@ Widget _timetableButton(BuildContext context) {
 }
 
 Widget _quickAttendanceCard(
-    BuildContext context, WidgetRef ref, List<TimetableEntry> entries,
-    List<TeacherClass> assignedClasses) {
+  BuildContext context,
+  WidgetRef ref,
+  List<TimetableEntry> entries,
+  List<TeacherClass> assignedClasses,
+) {
   if (entries.isEmpty) return const SizedBox.shrink();
 
   final now = DateTime.now();
@@ -176,7 +195,10 @@ Widget _quickAttendanceCard(
       break;
     }
     if (currentMinutes < startMin) {
-      if (upcoming == null || startMin < (int.parse(upcoming.startTime.split(':')[0]) * 60 + int.parse(upcoming.startTime.split(':')[1]))) {
+      if (upcoming == null ||
+          startMin <
+              (int.parse(upcoming.startTime.split(':')[0]) * 60 +
+                  int.parse(upcoming.startTime.split(':')[1]))) {
         upcoming = e;
       }
     }
@@ -229,28 +251,38 @@ Widget _quickAttendanceCard(
                 Text(
                   ongoing != null ? 'Ongoing Lecture' : 'Upcoming Lecture',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppColors.textSecondary)),
+                    color: AppColors.textSecondary,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(target.subjectName ?? 'Class',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  target.subjectName ?? 'Class',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 if (matchingClass != null)
-                  Text(matchingClass.display,
-                      style: Theme.of(context).textTheme.bodyMedium),
-                Text('${target.startTime} - ${target.endTime}',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    matchingClass.display,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                Text(
+                  '${target.startTime} - ${target.endTime}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ),
           const SizedBox(width: 8),
           FilledButton.icon(
             onPressed: () {
-              final cls = matchingClass ?? TeacherClass(
-                classId: target.classId,
-                className: '',
-                section: '',
-                subjectId: target.subjectId,
-                subjectName: target.subjectName ?? '',
-              );
+              final cls =
+                  matchingClass ??
+                  TeacherClass(
+                    classId: target.classId,
+                    className: '',
+                    section: '',
+                    subjectId: target.subjectId,
+                    subjectName: target.subjectName ?? '',
+                  );
               ref.read(attendanceStateProvider.notifier).quickSelectClass(cls);
               context.go('/teacher/attendance');
             },
@@ -273,8 +305,7 @@ Widget _quickActions(BuildContext context) {
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text('Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge),
+      Text('Quick Actions', style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       Row(
         children: [
@@ -283,11 +314,16 @@ Widget _quickActions(BuildContext context) {
               onTap: () => context.go('/teacher/attendance'),
               child: Column(
                 children: [
-                  Icon(Icons.calendar_today_rounded,
-                      color: AppColors.info, size: 32),
+                  Icon(
+                    Icons.calendar_today_rounded,
+                    color: AppColors.info,
+                    size: 32,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Mark Attendance',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'Mark Attendance',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -298,11 +334,16 @@ Widget _quickActions(BuildContext context) {
               onTap: () => context.go('/teacher/assignments'),
               child: Column(
                 children: [
-                  Icon(Icons.assignment_rounded,
-                      color: AppColors.success, size: 32),
+                  Icon(
+                    Icons.assignment_rounded,
+                    color: AppColors.success,
+                    size: 32,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Assignments',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'Assignments',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -317,11 +358,16 @@ Widget _quickActions(BuildContext context) {
               onTap: () => context.go('/teacher/announcements'),
               child: Column(
                 children: [
-                  Icon(Icons.campaign_rounded,
-                      color: AppColors.warning, size: 32),
+                  Icon(
+                    Icons.campaign_rounded,
+                    color: AppColors.warning,
+                    size: 32,
+                  ),
                   const SizedBox(height: 8),
-                  Text('Announcements',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'Announcements',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ],
               ),
             ),
@@ -352,26 +398,27 @@ Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
       upcoming.add(e);
     }
   }
-  upcoming.sort((a, b) =>
-      _minutesOf(a.startTime).compareTo(_minutesOf(b.startTime)));
+  upcoming.sort(
+    (a, b) => _minutesOf(a.startTime).compareTo(_minutesOf(b.startTime)),
+  );
 
   final visible = [if (ongoing != null) ongoing, ...upcoming];
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text("Today's Schedule",
-          style: Theme.of(context).textTheme.titleLarge),
+      Text("Today's Schedule", style: Theme.of(context).textTheme.titleLarge),
       const SizedBox(height: 12),
       if (visible.isEmpty)
         GlassCard(
           child: Row(
             children: [
-              Icon(Icons.event_available,
-                  color: AppColors.success, size: 24),
+              Icon(Icons.event_available, color: AppColors.success, size: 24),
               const SizedBox(width: 12),
-              Text('No classes now',
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                'No classes now',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
         )
@@ -397,19 +444,23 @@ Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(e.subjectName ?? 'Subject',
-                            style:
-                                Theme.of(context).textTheme.titleMedium),
-                        Text('${e.startTime} - ${e.endTime}',
-                            style:
-                                Theme.of(context).textTheme.bodyMedium),
+                        Text(
+                          e.subjectName ?? 'Subject',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Text(
+                          '${e.startTime} - ${e.endTime}',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
                       ],
                     ),
                   ),
                   if (ongoing?.id == e.id)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.success.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -417,14 +468,16 @@ Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.circle,
-                              size: 6, color: AppColors.success),
+                          Icon(Icons.circle, size: 6, color: AppColors.success),
                           SizedBox(width: 4),
-                          Text('Now',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.w600)),
+                          Text(
+                            'Now',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -436,5 +489,3 @@ Widget _todaySchedule(BuildContext context, List<TimetableEntry> entries) {
     ],
   );
 }
-
-

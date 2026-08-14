@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:school_erp_admin/core/theme/app_colors.dart';
+import 'package:school_erp_admin/core/widgets/shimmer.dart';
 
 class SkeletonLoader extends StatelessWidget {
   final double width;
   final double height;
   final BorderRadius borderRadius;
+  final Color? color;
 
   const SkeletonLoader({
     super.key,
     this.width = double.infinity,
     this.height = 20,
     this.borderRadius = const BorderRadius.all(Radius.circular(8)),
+    this.color,
   });
 
   @override
@@ -19,12 +21,9 @@ class SkeletonLoader extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark 
-            ? AppColors.surfaceDark.withValues(alpha: 0.5) 
-            : AppColors.background.withValues(alpha: 0.5),
+        color: color ?? shimmerBaseColor(context),
         borderRadius: borderRadius,
       ),
     );
   }
 }
-

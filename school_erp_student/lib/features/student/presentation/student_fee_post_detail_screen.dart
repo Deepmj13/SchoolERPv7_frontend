@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
+import 'package:school_erp_student/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_fees_provider.dart';
 
 class StudentFeePostDetailScreen extends ConsumerWidget {
   final String postId;
 
-  const StudentFeePostDetailScreen({
-    super.key,
-    required this.postId,
-  });
+  const StudentFeePostDetailScreen({super.key, required this.postId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,10 +18,12 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Fee Details')),
       body: feesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ListSkeletonLoader(),
         error: (e, _) => Center(
-          child: Text('Failed to load: $e',
-              style: const TextStyle(color: AppColors.error)),
+          child: Text(
+            'Failed to load: $e',
+            style: const TextStyle(color: AppColors.error),
+          ),
         ),
         data: (data) {
           final post = data.posts.where((p) => p.id == postId).firstOrNull;
@@ -41,8 +41,10 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 _summaryCard(context, post),
                 const SizedBox(height: 16),
-                Text('Fee Breakdown',
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  'Fee Breakdown',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 12),
                 ...post.structures.map(
                   (s) => Padding(
@@ -52,8 +54,10 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
                 ),
                 if (data.payments.isNotEmpty) ...[
                   const SizedBox(height: 24),
-                  Text('Payment History',
-                      style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    'Payment History',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: 12),
                   ...data.payments.map(
                     (p) => Padding(
@@ -75,22 +79,28 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(post.title,
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(post.title, style: Theme.of(context).textTheme.titleLarge),
           if (post.description != null && post.description!.isNotEmpty) ...[
             const SizedBox(height: 8),
-            Text(post.description!,
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              post.description!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
           if (post.dueDate != null) ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.calendar_today,
-                    size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
-                Text('Due: ${post.dueDate}',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  'Due: ${post.dueDate}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ],
@@ -142,16 +152,20 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
       children: [
         Icon(icon, color: color, size: 24),
         const SizedBox(height: 4),
-        Text('₹${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: color,
-            )),
-        Text(label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                )),
+        Text(
+          '₹${amount.toStringAsFixed(2)}',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+        ),
       ],
     );
   }
@@ -170,11 +184,15 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(fee.feeType,
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  fee.feeType,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 if (fee.paidDate != null)
-                  Text('Paid: ${fee.paidDate}',
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    'Paid: ${fee.paidDate}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
               ],
             ),
           ),
@@ -195,23 +213,28 @@ class StudentFeePostDetailScreen extends ConsumerWidget {
     return GlassCard(
       child: Row(
         children: [
-          const Icon(Icons.receipt_long,
-              color: AppColors.info, size: 24),
+          const Icon(Icons.receipt_long, color: AppColors.info, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('₹${payment.amount.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.titleMedium),
-                Text(payment.paymentDate,
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  '₹${payment.amount.toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                Text(
+                  payment.paymentDate,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ),
           if (payment.paymentMethod != null)
-            Text(payment.paymentMethod!,
-                style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              payment.paymentMethod!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
         ],
       ),
     );

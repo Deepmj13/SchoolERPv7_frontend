@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
+import 'package:school_erp_student/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_assignments_provider.dart';
 
 class StudentAssignmentDetailScreen extends ConsumerWidget {
   final String assignmentId;
 
-  const StudentAssignmentDetailScreen({
-    super.key,
-    required this.assignmentId,
-  });
+  const StudentAssignmentDetailScreen({super.key, required this.assignmentId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,15 +18,17 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Assignment')),
       body: assignmentsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const ListSkeletonLoader(),
         error: (e, _) => Center(
-          child: Text('Failed to load: $e',
-              style: const TextStyle(color: AppColors.error)),
+          child: Text(
+            'Failed to load: $e',
+            style: const TextStyle(color: AppColors.error),
+          ),
         ),
         data: (assignments) {
-          final assignment = assignments.where(
-            (a) => a.id == assignmentId,
-          ).firstOrNull;
+          final assignment = assignments
+              .where((a) => a.id == assignmentId)
+              .firstOrNull;
 
           if (assignment == null) {
             return const Center(child: Text('Assignment not found'));
@@ -69,25 +69,36 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(assignment.title,
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(assignment.title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Row(
             children: [
-              const Icon(Icons.book_rounded, size: 16, color: AppColors.textSecondary),
+              const Icon(
+                Icons.book_rounded,
+                size: 16,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: 6),
-              Text(assignment.subjectName,
-                  style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                assignment.subjectName,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ],
           ),
           if (assignment.dueDate != null) ...[
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 6),
-                Text('Due: ${assignment.dueDate}',
-                    style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  'Due: ${assignment.dueDate}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
               ],
             ),
           ],
@@ -105,11 +116,7 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
     };
     final color = statusColors[displayStatus] ?? AppColors.textSecondary;
 
-    final statusLabels = {
-      'pending': 'Pending',
-      'done': 'Done',
-      'late': 'Late',
-    };
+    final statusLabels = {'pending': 'Pending', 'done': 'Done', 'late': 'Late'};
 
     return GlassCard(
       child: Row(
@@ -125,8 +132,8 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
               displayStatus == 'done'
                   ? Icons.check_circle_rounded
                   : displayStatus == 'late'
-                      ? Icons.access_time_rounded
-                      : Icons.hourglass_empty_rounded,
+                  ? Icons.access_time_rounded
+                  : Icons.hourglass_empty_rounded,
               color: color,
               size: 24,
             ),
@@ -164,11 +171,12 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Description',
-              style: Theme.of(context).textTheme.titleMedium),
+          Text('Description', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text(assignment.description!,
-              style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            assignment.description!,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );
@@ -181,15 +189,23 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.comment_rounded, size: 18, color: AppColors.primary),
+              const Icon(
+                Icons.comment_rounded,
+                size: 18,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 6),
-              Text('Teacher\'s Remarks',
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'Teacher\'s Remarks',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(assignment.teacherRemarks!,
-              style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            assignment.teacherRemarks!,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
         ],
       ),
     );
@@ -218,8 +234,18 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
     try {
       final dt = DateTime.parse(isoDate);
       final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return 'Updated: ${months[dt.month - 1]} ${dt.day}, ${dt.year}';
     } catch (_) {
