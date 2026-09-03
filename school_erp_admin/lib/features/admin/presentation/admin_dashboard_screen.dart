@@ -1,15 +1,16 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
-import 'package:school_erp_admin/core/widgets/glass_card.dart';
+import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/widgets/shimmer.dart';
 import 'package:school_erp_admin/core/widgets/skeleton_loader.dart';
 import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
-import 'package:school_erp_admin/features/admin/presentation/widgets/dashboard_chart.dart';
-import 'package:school_erp_admin/features/admin/presentation/widgets/stats_panel.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/dashboard_header.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/quick_actions_grid.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/stats_overview_grid.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/analytics_section.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/recent_activity_feed.dart';
 
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) {
   final future = ref.watch(adminRepositoryProvider).getDashboardStats();
@@ -49,36 +50,130 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeaderSkeleton(context, isMobile),
-            SizedBox(height: isMobile ? 20 : 32),
-            if (isMobile)
-              SizedBox(
-                height: 120,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 4,
-                  separatorBuilder: (_, _) => const SizedBox(width: 12),
-                  itemBuilder: (_, _) => const _ShimmerCard(width: 140),
-                ),
-              )
-            else
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final crossAxisCount = constraints.maxWidth >= 1100 ? 4 : 3;
-                  return GridView.count(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 24,
-                    mainAxisSpacing: 24,
-                    childAspectRatio: 1.3,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: List.generate(4, (_) => const _ShimmerCard()),
-                  );
-                },
-              ),
+            _buildHeaderSkeleton(isMobile),
+            SizedBox(height: isMobile ? 20 : 28),
+            _buildQuickActionsSkeleton(isMobile),
+            SizedBox(height: isMobile ? 20 : 28),
+            _buildStatsSkeleton(isMobile),
+            SizedBox(height: isMobile ? 20 : 28),
+            _buildChartSkeleton(isMobile),
+            SizedBox(height: isMobile ? 16 : 24),
+            _buildActivitySkeleton(isMobile),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeaderSkeleton(bool isMobile) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonLoader(
+              width: isMobile ? 160 : 220,
+              height: isMobile ? 22 : 28,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            SizedBox(height: isMobile ? 6 : 10),
+            SkeletonLoader(
+              width: isMobile ? 180 : 280,
+              height: 14,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ],
+        ),
+        SkeletonLoader(
+          width: 42,
+          height: 42,
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionsSkeleton(bool isMobile) {
+    if (isMobile) {
+      return SizedBox(
+        height: 80,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: 5,
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
+          itemBuilder: (_, _) => SkeletonLoader(
+            width: 80,
+            height: 80,
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      );
+    }
+    return Row(
+      children: List.generate(
+        5,
+        (_) => Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 5),
+            child: SkeletonLoader(
+              height: 48,
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsSkeleton(bool isMobile) {
+    if (isMobile) {
+      return SizedBox(
+        height: 140,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: 4,
+          separatorBuilder: (_, _) => const SizedBox(width: 10),
+          itemBuilder: (_, _) => SkeletonLoader(
+            width: 130,
+            height: 130,
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final crossAxisCount = constraints.maxWidth >= 1100 ? 4 : 3;
+        return GridView.count(
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.6,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: List.generate(
+            4,
+            (_) => SkeletonLoader(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildChartSkeleton(bool isMobile) {
+    return SkeletonLoader(
+      height: isMobile ? 260 : 300,
+      borderRadius: BorderRadius.circular(16),
+    );
+  }
+
+  Widget _buildActivitySkeleton(bool isMobile) {
+    return SkeletonLoader(
+      height: isMobile ? 240 : 280,
+      borderRadius: BorderRadius.circular(16),
     );
   }
 
@@ -95,7 +190,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderSkeleton(context, isMobile),
+          _buildHeaderSkeleton(isMobile),
           SizedBox(height: isMobile ? 20 : 32),
           SizedBox(
             height: 300,
@@ -120,14 +215,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   Text(
                     'Failed to load statistics',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
-                      'We couldn\'t fetch your dashboard data. Please check your connection and try again.',
+                      "Couldn't fetch your dashboard data. Please check your connection and try again.",
                       style: Theme.of(context).textTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
@@ -152,7 +247,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     DashboardStats stats,
     bool isMobile,
   ) {
-    final weekData = _generateWeekData(stats.todayAttendancePercentage);
     final padding = isMobile ? 16.0 : 32.0;
 
     return SingleChildScrollView(
@@ -161,491 +255,52 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context, isMobile),
-          SizedBox(height: isMobile ? 20 : 32),
-          _buildStatsSection(context, stats, isMobile),
+          const DashboardHeader(),
           SizedBox(height: isMobile ? 20 : 28),
-          _buildChartsSection(context, stats, weekData, isMobile),
+          _SectionLabel(label: 'Quick Actions', isMobile: isMobile),
+          SizedBox(height: isMobile ? 10 : 14),
+          const QuickActionsGrid(),
           SizedBox(height: isMobile ? 20 : 28),
-          _buildActivitySection(context, stats, isMobile),
+          _SectionLabel(label: 'Overview', isMobile: isMobile),
+          SizedBox(height: isMobile ? 10 : 14),
+          StatsOverviewGrid(stats: stats, isMobile: isMobile),
+          SizedBox(height: isMobile ? 20 : 28),
+          _SectionLabel(label: 'Analytics', isMobile: isMobile),
+          SizedBox(height: isMobile ? 10 : 14),
+          AnalyticsSection(
+            todayAttendance: stats.todayAttendancePercentage,
+            totalStudents: stats.totalStudents,
+            totalTeachers: stats.totalTeachers,
+            totalClasses: stats.totalClasses,
+          ),
+          SizedBox(height: isMobile ? 20 : 28),
+          RecentActivityFeed(stats: stats, isMobile: isMobile),
+          SizedBox(height: isMobile ? 16 : 24),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context, bool isMobile) {
-    final now = DateTime.now();
-    final hour = now.hour;
-    final greeting = hour < 12
-        ? 'Good morning'
-        : hour < 17
-        ? 'Good afternoon'
-        : 'Good evening';
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$greeting, Admin',
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  fontSize: isMobile ? 22 : 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: isMobile ? 4 : 6),
-              Text(
-                _formatDateShort(now),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: isMobile ? 13 : 14),
-              ),
-              if (!isMobile) ...[
-                const SizedBox(height: 4),
-                Text(
-                  "Here's what's happening in your institution today.",
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontSize: 14),
-                ),
-              ],
-            ],
-          ),
-        ),
-        CircleAvatar(
-          radius: isMobile ? 18 : 20,
-          backgroundColor: AppColors.primary.withValues(alpha: 0.15),
-          child: const Icon(
-            Icons.admin_panel_settings,
-            color: AppColors.primary,
-            size: 22,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHeaderSkeleton(BuildContext context, bool isMobile) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SkeletonLoader(
-              width: isMobile ? 140 : 200,
-              height: isMobile ? 22 : 28,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            SizedBox(height: isMobile ? 6 : 10),
-            SkeletonLoader(
-              width: isMobile ? 120 : 250,
-              height: 14,
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ],
-        ),
-        SkeletonLoader(
-          width: isMobile ? 36 : 40,
-          height: isMobile ? 36 : 40,
-          borderRadius: BorderRadius.circular(isMobile ? 18 : 20),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatsSection(
-    BuildContext context,
-    DashboardStats stats,
-    bool isMobile,
-  ) {
-    if (isMobile) {
-      return SizedBox(
-        height: 115,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: 4,
-          separatorBuilder: (_, _) => const SizedBox(width: 12),
-          itemBuilder: (context, index) {
-            switch (index) {
-              case 0:
-                return _CompactStatCard(
-                  icon: Icons.people_rounded,
-                  label: 'Students',
-                  value: '${stats.totalStudents}',
-                  color: AppColors.info,
-                );
-              case 1:
-                return _CompactStatCard(
-                  icon: Icons.person_rounded,
-                  label: 'Teachers',
-                  value: '${stats.totalTeachers}',
-                  color: AppColors.success,
-                );
-              case 2:
-                return _CompactStatCard(
-                  icon: Icons.school_rounded,
-                  label: 'Classes',
-                  value: '${stats.totalClasses}',
-                  color: AppColors.warning,
-                );
-              default:
-                return _CompactStatCard(
-                  icon: Icons.trending_up_rounded,
-                  label: 'Attendance',
-                  value:
-                      '${stats.todayAttendancePercentage.toStringAsFixed(1)}%',
-                  color: AppColors.primary,
-                );
-            }
-          },
-        ),
-      );
-    }
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth >= 1100 ? 4 : 3;
-        return GridView.count(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 24,
-          mainAxisSpacing: 24,
-          childAspectRatio: 1.3,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            StatsPanel(
-              icon: Icons.people_rounded,
-              label: 'Total Students',
-              value: '${stats.totalStudents}',
-              color: AppColors.info,
-              trend: '+12%',
-              trendUp: true,
-            ),
-            StatsPanel(
-              icon: Icons.person_rounded,
-              label: 'Total Teachers',
-              value: '${stats.totalTeachers}',
-              color: AppColors.success,
-              trend: '+5%',
-              trendUp: true,
-            ),
-            StatsPanel(
-              icon: Icons.school_rounded,
-              label: 'Total Classes',
-              value: '${stats.totalClasses}',
-              color: AppColors.warning,
-              trend: '0%',
-              trendUp: true,
-            ),
-            StatsPanel(
-              icon: Icons.trending_up_rounded,
-              label: "Today's Attendance",
-              value: '${stats.todayAttendancePercentage.toStringAsFixed(1)}%',
-              color: AppColors.primary,
-              trend: stats.todayAttendancePercentage >= 90
-                  ? '+2.1%'
-                  : stats.todayAttendancePercentage >= 75
-                  ? '-1.3%'
-                  : '-4.8%',
-              trendUp: stats.todayAttendancePercentage >= 90,
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildChartsSection(
-    BuildContext context,
-    DashboardStats stats,
-    List<double> weekData,
-    bool isMobile,
-  ) {
-    const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    final attendanceMap = <String, double>{};
-    for (int i = 0; i < weekDays.length && i < weekData.length; i++) {
-      attendanceMap[weekDays[i]] = weekData[i];
-    }
-
-    final chartHeight = isMobile ? 120.0 : 180.0;
-
-    return Column(
-      children: [
-        AttendanceBarChart(data: attendanceMap, height: chartHeight),
-        SizedBox(height: isMobile ? 16 : 24),
-        DistributionCard(
-          totalStudents: stats.totalStudents,
-          totalTeachers: stats.totalTeachers,
-          totalClasses: stats.totalClasses,
-          attendancePercentage: stats.todayAttendancePercentage,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivitySection(
-    BuildContext context,
-    DashboardStats stats,
-    bool isMobile,
-  ) {
-    final cardPadding = isMobile ? 16.0 : 20.0;
-    return GlassCard(
-      padding: EdgeInsets.all(cardPadding),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Recent Activity',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              Icon(
-                Icons.history_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-          SizedBox(height: isMobile ? 12 : 16),
-          _ActivityTile(
-            icon: Icons.people_rounded,
-            color: AppColors.info,
-            title: 'Student Enrollment',
-            subtitle:
-                '${stats.totalStudents} students are currently enrolled across all classes.',
-          ),
-          const Divider(height: 24),
-          _ActivityTile(
-            icon: Icons.person_rounded,
-            color: AppColors.success,
-            title: 'Teaching Staff',
-            subtitle:
-                '${stats.totalTeachers} teachers are active this academic year.',
-          ),
-          const Divider(height: 24),
-          _ActivityTile(
-            icon: Icons.school_rounded,
-            color: AppColors.warning,
-            title: 'Class Schedule',
-            subtitle:
-                '${stats.totalClasses} classes are running with assigned teachers.',
-          ),
-          const Divider(height: 24),
-          _ActivityTile(
-            icon: Icons.trending_up_rounded,
-            color: AppColors.primary,
-            title: "Today's Attendance",
-            subtitle: stats.todayAttendancePercentage >= 90
-                ? 'Excellent attendance at ${stats.todayAttendancePercentage.toStringAsFixed(1)}% today!'
-                : stats.todayAttendancePercentage >= 75
-                ? 'Attendance is at ${stats.todayAttendancePercentage.toStringAsFixed(1)}%. Room for improvement.'
-                : 'Attendance dropped to ${stats.todayAttendancePercentage.toStringAsFixed(1)}%. Please review.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDateShort(DateTime date) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.day}, ${date.year}';
-  }
-
-  List<double> _generateWeekData(double todayPercentage) {
-    final rng = Random();
-    return List.generate(7, (i) {
-      if (i == 6) return todayPercentage;
-      return (todayPercentage + (rng.nextDouble() - 0.5) * 16).clamp(
-        60.0,
-        100.0,
-      );
-    });
-  }
-}
-
-class _ShimmerCard extends StatelessWidget {
-  final double? width;
-  const _ShimmerCard({this.width});
-
-  @override
-  Widget build(BuildContext context) {
-    final isCompact = width != null;
-    return GlassCard(
-      padding: EdgeInsets.all(isCompact ? 14 : 20),
-      width: width,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: isCompact
-            ? [
-                SkeletonLoader(
-                  width: 32,
-                  height: 32,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                const Spacer(),
-                SkeletonLoader(
-                  width: 60,
-                  height: 20,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                const SizedBox(height: 6),
-                SkeletonLoader(
-                  width: 50,
-                  height: 12,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ]
-            : [
-                SkeletonLoader(
-                  width: 44,
-                  height: 44,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                const Spacer(),
-                SkeletonLoader(
-                  width: 100,
-                  height: 28,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                const SizedBox(height: 8),
-                SkeletonLoader(
-                  width: 80,
-                  height: 14,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ],
       ),
     );
   }
 }
 
-class _CompactStatCard extends StatelessWidget {
-  final IconData icon;
+class _SectionLabel extends StatelessWidget {
   final String label;
-  final String value;
-  final Color color;
+  final bool isMobile;
 
-  const _CompactStatCard({
-    required this.icon,
+  const _SectionLabel({
     required this.label,
-    required this.value,
-    required this.color,
+    required this.isMobile,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      width: 120,
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, color: color, size: 16),
+    return Text(
+      label,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontSize: isMobile ? 13 : 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.3,
           ),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontSize: 12),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActivityTile extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String subtitle;
-
-  const _ActivityTile({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontSize: 13),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

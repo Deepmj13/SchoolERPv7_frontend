@@ -574,11 +574,11 @@ class _FilterDropdown<T> extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return itemsAsync.when(
-      loading: () => const SizedBox(width: 140, child: LinearProgressIndicator()),
+      loading: () => const SizedBox(width: 170, child: LinearProgressIndicator()),
       error: (_, __) => const SizedBox.shrink(),
       data: (items) {
         return SizedBox(
-          width: 140,
+          width: 170,
           child: DropdownButtonFormField<String>(
             initialValue: selectedId,
             decoration: InputDecoration(
