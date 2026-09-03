@@ -9,6 +9,8 @@ import 'package:school_erp_admin/features/admin/data/admin_repository.dart';
 import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/timetable_provider.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/timetable_form_sheet.dart';
+import 'package:school_erp_admin/features/admin/presentation/widgets/timetable_matrix_editor.dart';
 
 final _classesProvider = FutureProvider<List<ClassModel>>((ref) {
   return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
@@ -41,6 +43,22 @@ class AdminTimetableScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
+  bool _editMode = false;
+  List<Subject> _subjects = [];
+  List<Teacher> _teachers = [];
+
+  Future<void> _enterEditMode() async {
+    final repo = ref.read(adminRepositoryProvider);
+    final subjects = await repo.getSubjects();
+    final teachers = await repo.getTeachers();
+    if (!mounted) return;
+    setState(() {
+      _subjects = subjects;
+      _teachers = teachers;
+      _editMode = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final classesAsync = ref.watch(_classesProvider);
@@ -49,7 +67,16 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
     final isMobile = context.isMobile;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Timetable')),
+      appBar: AppBar(
+        title: Text(_editMode ? 'Edit Timetable' : 'Timetable'),
+        actions: [
+          if (_editMode)
+            TextButton(
+              onPressed: () => setState(() => _editMode = false),
+              child: const Text('Done'),
+            ),
+        ],
+      ),
       body: classesAsync.when(
         loading: () => const ListSkeletonLoader(),
         error: (e, _) => ErrorRetryWidget(
@@ -76,28 +103,64 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                     .toList(),
                 onChanged: (v) {
                   ref.read(selectedClassProvider.notifier).state = v;
+                  if (_editMode) setState(() => _editMode = false);
                 },
               ),
               const SizedBox(height: 16),
               if (selectedClass != null)
-                Row(
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    CustomButton(
-                      label: 'Add Entry',
-                      icon: Icons.add,
-                      onPressed: () => _showEntryForm(null),
-                    ),
-                    const Spacer(),
+                    if (!_editMode) ...[
+                      CustomButton(
+                        label: 'Add Entry',
+                        icon: Icons.add,
+                        onPressed: () => _showEntryForm(null),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (!_editMode && !(entriesAsync.valueOrNull?.isEmpty ?? true))
+                      CustomButton(
+                        label: 'Edit Timetable',
+                        icon: Icons.edit_calendar,
+                        onPressed: _enterEditMode,
+                      ),
                     if (entriesAsync.isLoading)
-                      const CircularProgressIndicator(strokeWidth: 2),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
                   ],
                 ),
               if (selectedClass == null)
                 SizedBox(
-                  height: 200,
+                  height: 300,
                   child: Center(
-                    child: Text('Select a class to view timetable',
-                        style: TextStyle(color: AppColors.textSecondary)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 72, height: 72,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(Icons.calendar_month_rounded, color: AppColors.primary, size: 36),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Select a class',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Choose a class above to view or build its timetable',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
                 )
               else
@@ -113,15 +176,63 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
                       onRetry: () => ref.invalidate(timetableEntriesProvider),
                     ),
                   ),
-                  data: (entries) => entries.isEmpty
-                      ? SizedBox(
-                          height: 200,
-                          child: Center(
-                            child: Text('No timetable entries for this class',
-                                style: TextStyle(color: AppColors.textSecondary)),
+                  data: (entries) {
+                    if (_editMode) {
+                      return SizedBox(
+                        height: 500,
+                        child: TimetableMatrixEditor(
+                          existingEntries: entries,
+                          subjects: _subjects,
+                          teachers: _teachers,
+                          classId: selectedClass.id,
+                          onSave: (result) => _saveBulkChanges(result),
+                          onCancel: () => setState(() => _editMode = false),
+                        ),
+                      );
+                    }
+                    if (entries.isEmpty) {
+                      return SizedBox(
+                        height: 300,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 64, height: 64,
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(Icons.event_busy_rounded, color: AppColors.warning, size: 32),
+                              ),
+                              const SizedBox(height: 14),
+                              Text(
+                                'No entries yet',
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Start building the timetable by adding your first entry.',
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              FilledButton.icon(
+                                onPressed: () => _showEntryForm(null),
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('Add First Entry'),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                ),
+                              ),
+                            ],
                           ),
-                        )
-                      : _buildWeeklyGrid(entries, isMobile),
+                        ),
+                      );
+                    }
+                    return _buildWeeklyGrid(entries, isMobile);
+                  },
                 ),
             ],
           ),
@@ -408,220 +519,107 @@ class _AdminTimetableScreenState extends ConsumerState<AdminTimetableScreen> {
     final teachers = await repo.getTeachers();
     if (!mounted) return;
 
-    Subject? selSubject;
-    Teacher? selTeacher;
-    String selDay = existing?.day ?? 'mon';
-    final startCtrl = TextEditingController(text: existing?.startTime ?? '');
-    final endCtrl = TextEditingController(text: existing?.endTime ?? '');
-    final roomCtrl = TextEditingController(text: existing?.room ?? '');
-    bool saving = false;
-
-    if (existing != null) {
-      selSubject = subjects.where((s) => s.id == existing.subjectId).firstOrNull;
-      selTeacher = teachers.where((t) => t.id == existing.teacherId).firstOrNull;
-    }
-
     final selectedClass = ref.read(selectedClassProvider);
-    final isMobile = context.isMobile;
+    if (selectedClass == null) return;
 
-    final saved = await (isMobile
-        ? _showBottomSheet(subjects, teachers, selSubject, selTeacher, selDay, startCtrl, endCtrl, roomCtrl, saving, existing, selectedClass)
-        : _showDialog(subjects, teachers, selSubject, selTeacher, selDay, startCtrl, endCtrl, roomCtrl, saving, existing, selectedClass));
-
-    if (saved == true) ref.invalidate(timetableEntriesProvider);
-  }
-
-  Future<bool?> _showDialog(
-    List<Subject> subjects,
-    List<Teacher> teachers,
-    Subject? selSubject,
-    Teacher? selTeacher,
-    String selDay,
-    TextEditingController startCtrl,
-    TextEditingController endCtrl,
-    TextEditingController roomCtrl,
-    bool saving,
-    TimetableEntry? existing,
-    ClassModel? selectedClass,
-  ) {
-    return showDialog<bool>(
+    final result = await showTimetableEntryForm(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: Text(existing != null ? 'Edit Entry' : 'Add Entry'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<Subject>(
-                  initialValue: selSubject,
-                  decoration: const InputDecoration(labelText: 'Subject', prefixIcon: Icon(Icons.book)),
-                  items: subjects.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
-                  onChanged: (v) => setDialogState(() => selSubject = v),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<Teacher>(
-                  initialValue: selTeacher,
-                  decoration: const InputDecoration(labelText: 'Teacher', prefixIcon: Icon(Icons.person)),
-                  items: teachers.map((t) => DropdownMenuItem(value: t, child: Text(t.fullName))).toList(),
-                  onChanged: (v) => setDialogState(() => selTeacher = v),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: selDay,
-                  decoration: const InputDecoration(labelText: 'Day', prefixIcon: Icon(Icons.calendar_today)),
-                  items: const [
-                    DropdownMenuItem(value: 'mon', child: Text('Monday')),
-                    DropdownMenuItem(value: 'tue', child: Text('Tuesday')),
-                    DropdownMenuItem(value: 'wed', child: Text('Wednesday')),
-                    DropdownMenuItem(value: 'thu', child: Text('Thursday')),
-                    DropdownMenuItem(value: 'fri', child: Text('Friday')),
-                    DropdownMenuItem(value: 'sat', child: Text('Saturday')),
-                  ],
-                  onChanged: (v) => setDialogState(() => selDay = v!),
-                ),
-                const SizedBox(height: 12),
-                TextField(controller: startCtrl, decoration: const InputDecoration(labelText: 'Start Time (HH:MM)', hintText: 'e.g. 09:00')),
-                const SizedBox(height: 12),
-                TextField(controller: endCtrl, decoration: const InputDecoration(labelText: 'End Time (HH:MM)', hintText: 'e.g. 10:00')),
-                const SizedBox(height: 12),
-                TextField(controller: roomCtrl, decoration: const InputDecoration(labelText: 'Room (optional)', hintText: 'e.g. 101')),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-            CustomButton(
-              label: existing != null ? 'Update' : 'Add',
-              onPressed: saving ? null : () => _saveEntry(ctx, setDialogState, saving, existing, selectedClass, selSubject, selTeacher, selDay, startCtrl, endCtrl, roomCtrl),
-            ),
-          ],
-        ),
-      ),
+      subjects: subjects,
+      teachers: teachers,
+      existing: existing,
     );
-  }
 
-  Future<bool?> _showBottomSheet(
-    List<Subject> subjects,
-    List<Teacher> teachers,
-    Subject? selSubject,
-    Teacher? selTeacher,
-    String selDay,
-    TextEditingController startCtrl,
-    TextEditingController endCtrl,
-    TextEditingController roomCtrl,
-    bool saving,
-    TimetableEntry? existing,
-    ClassModel? selectedClass,
-  ) {
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheetState) => Padding(
-          padding: EdgeInsets.only(left: 24, right: 24, top: 24, bottom: MediaQuery.of(ctx).viewInsets.bottom + 24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)))),
-                const SizedBox(height: 20),
-                Text(existing != null ? 'Edit Entry' : 'Add Entry', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<Subject>(
-                  initialValue: selSubject,
-                  decoration: const InputDecoration(labelText: 'Subject *', prefixIcon: Icon(Icons.book)),
-                  items: subjects.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
-                  onChanged: (v) => setSheetState(() => selSubject = v),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<Teacher>(
-                  initialValue: selTeacher,
-                  decoration: const InputDecoration(labelText: 'Teacher *', prefixIcon: Icon(Icons.person)),
-                  items: teachers.map((t) => DropdownMenuItem(value: t, child: Text(t.fullName))).toList(),
-                  onChanged: (v) => setSheetState(() => selTeacher = v),
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: selDay,
-                  decoration: const InputDecoration(labelText: 'Day', prefixIcon: Icon(Icons.calendar_today)),
-                  items: const [
-                    DropdownMenuItem(value: 'mon', child: Text('Monday')),
-                    DropdownMenuItem(value: 'tue', child: Text('Tuesday')),
-                    DropdownMenuItem(value: 'wed', child: Text('Wednesday')),
-                    DropdownMenuItem(value: 'thu', child: Text('Thursday')),
-                    DropdownMenuItem(value: 'fri', child: Text('Friday')),
-                    DropdownMenuItem(value: 'sat', child: Text('Saturday')),
-                  ],
-                  onChanged: (v) => setSheetState(() => selDay = v!),
-                ),
-                const SizedBox(height: 12),
-                TextField(controller: startCtrl, decoration: const InputDecoration(labelText: 'Start Time (HH:MM)', hintText: 'e.g. 09:00', prefixIcon: Icon(Icons.access_time))),
-                const SizedBox(height: 12),
-                TextField(controller: endCtrl, decoration: const InputDecoration(labelText: 'End Time (HH:MM)', hintText: 'e.g. 10:00', prefixIcon: Icon(Icons.access_time))),
-                const SizedBox(height: 12),
-                TextField(controller: roomCtrl, decoration: const InputDecoration(labelText: 'Room (optional)', hintText: 'e.g. 101', prefixIcon: Icon(Icons.meeting_room))),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                    onPressed: saving ? null : () => _saveEntry(ctx, setSheetState, saving, existing, selectedClass, selSubject, selTeacher, selDay, startCtrl, endCtrl, roomCtrl),
-                    child: saving
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : Text(existing != null ? 'Update' : 'Add'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+    if (result == null || !mounted) return;
 
-  Future<void> _saveEntry(
-    BuildContext ctx,
-    void Function(void Function()) setStateFn,
-    bool saving,
-    TimetableEntry? existing,
-    ClassModel? selectedClass,
-    Subject? selSubject,
-    Teacher? selTeacher,
-    String selDay,
-    TextEditingController startCtrl,
-    TextEditingController endCtrl,
-    TextEditingController roomCtrl,
-  ) async {
-    if (selSubject == null || selTeacher == null || startCtrl.text.isEmpty || endCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Please fill all required fields'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating));
-      return;
-    }
-    setStateFn(() { saving = true; });
-    final body = <String, dynamic>{
-      'class_id': selectedClass!.id,
-      'subject_id': selSubject.id,
-      'teacher_id': selTeacher.id,
-      'day': selDay,
-      'start_time': startCtrl.text,
-      'end_time': endCtrl.text,
-    };
-    if (roomCtrl.text.trim().isNotEmpty) body['room'] = roomCtrl.text.trim();
-    final controller = ref.read(timetableControllerProvider.notifier);
-    final success = existing != null
-        ? await controller.updateEntry(existing.id, body)
-        : await controller.createEntry(body);
-    if (ctx.mounted) {
+    final body = {...result.body, 'class_id': selectedClass.id};
+
+    try {
+      final controller = ref.read(timetableControllerProvider.notifier);
+      final success = existing != null
+          ? await controller.updateEntry(existing.id, body)
+          : await controller.createEntry(body);
       if (success) {
-        Navigator.pop(ctx, true);
+        ref.invalidate(timetableEntriesProvider);
+      } else if (mounted) {
+        _showError('Failed to save entry');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      final msg = e.toString();
+      if (msg.contains('409') || msg.toLowerCase().contains('conflict')) {
+        _showError('Time conflict — this teacher or time slot is already assigned.');
       } else {
-        setStateFn(() { saving = false; });
-        ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Failed to save entry'), backgroundColor: AppColors.error, behavior: SnackBarBehavior.floating));
+        _showError('Failed to save entry. Please try again.');
       }
     }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  Future<void> _saveBulkChanges(TimetableSaveResult diff) async {
+    if (!mounted) return;
+    final controller = ref.read(timetableControllerProvider.notifier);
+    int created = 0, updated = 0, deleted = 0;
+    String? firstError;
+
+    for (final entry in diff.toCreate) {
+      try {
+        final ok = await controller.createEntry(entry);
+        if (ok) created++;
+      } catch (e) {
+        firstError ??= e.toString();
+      }
+    }
+
+    for (final entry in diff.toUpdate) {
+      try {
+        final ok = await controller.updateEntry(entry.id, entry.body);
+        if (ok) updated++;
+      } catch (e) {
+        firstError ??= e.toString();
+      }
+    }
+
+    for (final id in diff.toDelete) {
+      try {
+        final ok = await controller.deleteEntry(id);
+        if (ok) deleted++;
+      } catch (e) {
+        firstError ??= e.toString();
+      }
+    }
+
+    ref.invalidate(timetableEntriesProvider);
+
+    if (!mounted) return;
+    setState(() => _editMode = false);
+
+    final parts = <String>[];
+    if (created > 0) parts.add('$created added');
+    if (updated > 0) parts.add('$updated updated');
+    if (deleted > 0) parts.add('$deleted removed');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          firstError != null
+              ? 'Saved with errors: ${parts.join(", ")}'
+              : 'Timetable updated: ${parts.join(", ")}',
+        ),
+        backgroundColor: firstError != null ? AppColors.warning : AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   bool _isToday(String day) {
