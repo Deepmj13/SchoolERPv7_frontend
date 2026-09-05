@@ -57,9 +57,10 @@ class TeacherDashboardScreen extends ConsumerWidget {
     final dashboardAsync = ref.watch(teacherDashboardProvider);
 
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: dashboardAsync.when(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: dashboardAsync.when(
           loading: () => const DashboardSkeletonLoader(),
           error: (e, _) => Center(
             child: Text(
@@ -68,6 +69,7 @@ class TeacherDashboardScreen extends ConsumerWidget {
             ),
           ),
           data: (data) => _buildContent(context, ref, data),
+          ),
         ),
       ),
     );
