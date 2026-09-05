@@ -51,10 +51,11 @@ String _formatDate(DateTime d) {
 String _dayForDate(DateTime d) => _weekdayDays[d.weekday - 1];
 
 String _dateStrForDay(String day, DateTime now) {
-  if (day == _dayForDate(now)) return _formatDate(now);
-  final tomorrow = now.add(const Duration(days: 1));
-  if (day == _dayForDate(tomorrow)) return _formatDate(tomorrow);
-  return _formatDate(now);
+  final targetIdx = _weekdayDays.indexOf(day);
+  if (targetIdx < 0) return _formatDate(now);
+  var diff = targetIdx - (now.weekday - 1);
+  if (diff < 0) diff += 7;
+  return _formatDate(now.add(Duration(days: diff)));
 }
 
 final selectedDayProvider = StateProvider<String>((ref) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
+import 'package:school_erp_student/core/utils/date_format.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
 import 'package:school_erp_student/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
@@ -154,7 +155,8 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
                 if (assignment.submissionUpdatedAt != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    _formatDate(assignment.submissionUpdatedAt!),
+                    formatDateFromIso(assignment.submissionUpdatedAt,
+                        prefix: 'Updated: '),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
@@ -228,28 +230,5 @@ class StudentAssignmentDetailScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(String isoDate) {
-    try {
-      final dt = DateTime.parse(isoDate);
-      final months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      return 'Updated: ${months[dt.month - 1]} ${dt.day}, ${dt.year}';
-    } catch (_) {
-      return isoDate;
-    }
   }
 }

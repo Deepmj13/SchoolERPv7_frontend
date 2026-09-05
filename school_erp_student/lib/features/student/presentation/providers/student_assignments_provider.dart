@@ -8,10 +8,3 @@ final studentAssignmentsProvider =
   final assignments = await repo.getAssignments();
   return assignments;
 });
-
-final studentNoticesProvider =
-    FutureProvider.autoDispose<List<Notice>>((ref) async {
-  final repo = ref.watch(studentRepositoryProvider);
-  final notices = await repo.getNotices();
-  return notices;
-});

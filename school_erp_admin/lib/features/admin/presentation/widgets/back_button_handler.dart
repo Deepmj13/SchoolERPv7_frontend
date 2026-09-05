@@ -18,7 +18,6 @@ class BackButtonHandler extends StatefulWidget {
 
 class _BackButtonHandlerState extends State<BackButtonHandler> {
   DateTime? _lastPress;
-  bool _canPop = false;
 
   static const _homeRoute = '/admin/dashboard';
   static const _kDoubleTapInterval = Duration(milliseconds: 500);
@@ -29,7 +28,6 @@ class _BackButtonHandlerState extends State<BackButtonHandler> {
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) {
-          _canPop = false;
           return;
         }
 
@@ -55,7 +53,6 @@ class _BackButtonHandlerState extends State<BackButtonHandler> {
 
         _lastPress = now;
         if (context.canPop()) {
-          setState(() => _canPop = true);
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) context.pop();
           });

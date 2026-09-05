@@ -189,6 +189,7 @@ class MarksStateNotifier extends StateNotifier<MarksState> {
           .map((e) => {
                 'studentId': e.key,
                 'marksObtained': e.value,
+                'totalMarks': state.totalMarks,
               })
           .toList();
       await _repo.bulkEnterMarks(

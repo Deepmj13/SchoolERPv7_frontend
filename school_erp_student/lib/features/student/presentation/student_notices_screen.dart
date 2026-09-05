@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
+import 'package:school_erp_student/core/utils/date_format.dart';
 import 'package:school_erp_student/core/widgets/glass_card.dart';
 import 'package:school_erp_student/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
@@ -135,8 +136,9 @@ class StudentNoticesScreen extends ConsumerWidget {
                   color: AppColors.textSecondary,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  _formatDate(notice.createdAt),
+Text(
+                  formatDateFromIso(notice.createdAt,
+                      style: DateFormatStyle.numeric),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -189,7 +191,8 @@ class StudentNoticesScreen extends ConsumerWidget {
           ],
           const SizedBox(height: 8),
           Text(
-            _formatDate(notice.createdAt),
+            formatDateFromIso(notice.createdAt,
+                style: DateFormatStyle.numeric),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(fontSize: 12),
@@ -197,14 +200,5 @@ class StudentNoticesScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _formatDate(String dateStr) {
-    try {
-      final dt = DateTime.parse(dateStr);
-      return '${dt.day}/${dt.month}/${dt.year}';
-    } catch (_) {
-      return dateStr;
-    }
   }
 }

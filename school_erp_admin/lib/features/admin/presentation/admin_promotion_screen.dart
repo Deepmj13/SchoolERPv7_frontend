@@ -8,11 +8,11 @@ import 'package:school_erp_admin/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
-final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
+final promotionClassesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
   return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
-final classStudentsProvider = FutureProvider.family<List<Student>, String>((ref, classId) {
+final promotionClassStudentsProvider = FutureProvider.family<List<Student>, String>((ref, classId) {
   return ref.watch(adminRepositoryProvider).getClassStudents(classId).timeout(const Duration(seconds: 30));
 });
 
@@ -58,7 +58,7 @@ class _AdminPromotionScreenState extends ConsumerState<AdminPromotionScreen> {
         _resultMessage = result['message'] as String? ?? 'Promotion successful';
         _selectedIds.clear();
       });
-      ref.invalidate(classStudentsProvider(_fromClassId!));
+      ref.invalidate(promotionClassStudentsProvider(_fromClassId!));
     } catch (e) {
       setState(() => _resultMessage = 'Failed: $e');
     } finally {
@@ -78,7 +78,7 @@ class _AdminPromotionScreenState extends ConsumerState<AdminPromotionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final classesAsync = ref.watch(classesForFilterProvider);
+    final classesAsync = ref.watch(promotionClassesForFilterProvider);
     final isMobile = context.isMobile;
 
     return Scaffold(
@@ -230,13 +230,13 @@ class _AdminPromotionScreenState extends ConsumerState<AdminPromotionScreen> {
   }
 
   Widget _buildStudentList(bool isMobile) {
-    final studentsAsync = ref.watch(classStudentsProvider(_fromClassId!));
+    final studentsAsync = ref.watch(promotionClassStudentsProvider(_fromClassId!));
 
     return studentsAsync.when(
       loading: () => const ListSkeletonLoader(),
       error: (e, _) => ErrorRetryWidget(
         message: e.toString(),
-        onRetry: () => ref.invalidate(classStudentsProvider(_fromClassId!)),
+        onRetry: () => ref.invalidate(promotionClassStudentsProvider(_fromClassId!)),
       ),
       data: (students) {
         if (students.isEmpty) {

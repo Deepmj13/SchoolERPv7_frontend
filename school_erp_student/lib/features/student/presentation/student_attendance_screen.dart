@@ -190,10 +190,14 @@ class _StudentAttendanceScreenState
                     Icon(
                       record.status == 'present'
                           ? Icons.check_circle
-                          : Icons.cancel,
+                          : record.status == 'late'
+                              ? Icons.schedule
+                              : Icons.cancel,
                       color: record.status == 'present'
                           ? AppColors.success
-                          : AppColors.error,
+                          : record.status == 'late'
+                              ? AppColors.warning
+                              : AppColors.error,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -220,7 +224,9 @@ class _StudentAttendanceScreenState
                       decoration: BoxDecoration(
                         color: record.status == 'present'
                             ? AppColors.success.withValues(alpha: 0.1)
-                            : AppColors.error.withValues(alpha: 0.1),
+                            : record.status == 'late'
+                                ? AppColors.warning.withValues(alpha: 0.1)
+                                : AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -230,7 +236,9 @@ class _StudentAttendanceScreenState
                           fontWeight: FontWeight.w600,
                           color: record.status == 'present'
                               ? AppColors.success
-                              : AppColors.error,
+                              : record.status == 'late'
+                                  ? AppColors.warning
+                                  : AppColors.error,
                         ),
                       ),
                     ),

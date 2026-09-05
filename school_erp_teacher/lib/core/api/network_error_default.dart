@@ -1,0 +1,1 @@
+String? networkErrorMessage(Object error) => null;

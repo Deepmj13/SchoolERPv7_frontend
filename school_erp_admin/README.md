@@ -100,7 +100,6 @@ lib/
 │               ├── admin_form_sheet.dart
 │               ├── analytics_section.dart
 │               ├── back_button_handler.dart
-│               ├── dashboard_chart.dart
 │               ├── dashboard_header.dart
 │               ├── data_table_widget.dart
 │               ├── quick_actions_grid.dart
@@ -112,9 +111,6 @@ lib/
 │               └── timetable_matrix_editor.dart
 └── test/
     ├── widget_test.dart
-    ├── helpers/
-    │   ├── fake_secure_storage.dart
-    │   └── fake_storage_service.dart
     └── features/
         ├── auth/domain/user_model_test.dart
         └── admin/domain/admin_models_test.dart
@@ -313,8 +309,8 @@ class ApiException implements Exception {
 |--------|-------------|
 | `saveToken(String token)` | `Future<void>` |
 | `getToken()` | `Future<String?>` |
-| `saveUser(UserModel user)` | `Future<void>` |
-| `getUser()` | `Future<UserModel?>` |
+| `saveUser(Map<String, dynamic> user)` | `Future<void>` |
+| `getUser()` | `Future<Map<String, dynamic>?>` |
 | `saveThemeMode(String mode)` | `Future<void>` |
 | `getThemeMode()` | `Future<String?>` |
 | `clear()` | `Future<void>` |
@@ -918,27 +914,27 @@ All methods are in `features/admin/data/admin_repository.dart` (76 methods total
 
 | Screen | File | Route | Providers Watched | Key Features |
 |--------|------|-------|-------------------|--------------|
-| `AdminShell` | `admin_shell.dart` | ShellRoute wrapper | `connectivityProvider`, `themeModeProvider`, `sidebarCollapsedProvider` | Three-tier adaptive layout, sidebar nav (desktop), bottom nav (mobile), drawer (mobile), online/offline banner |
+| `AdminShell` | `admin_shell.dart` | ShellRoute wrapper | `connectivityProvider`, `sidebarCollapsedProvider` | Three-tier adaptive layout, sidebar nav (desktop), bottom nav (mobile), drawer (mobile), online/offline banner. Theme toggle lives in `sidebar_nav.dart` (watches `themeModeProvider`), not the shell itself. |
 | `LoginScreen` | `login_screen.dart` | `/login` | `authStateProvider`, `connectivityProvider` | Email/password form, role validation, error display |
-| `AdminDashboardScreen` | `admin_dashboard_screen.dart` | `/admin/dashboard` | `adminDashboardStatsProvider` | Stats overview, charts, quick actions, recent activity |
+| `AdminDashboardScreen` | `admin_dashboard_screen.dart` | `/admin/dashboard` | `dashboardStatsProvider` | Stats overview grid, quick actions, recent activity |
 | `AdminStudentsScreen` | `admin_students_screen.dart` | `/admin/students` | `studentsProvider` | Paginated list, search, create/edit/delete via form dialogs, activate/deactivate |
 | `AdminTeachersScreen` | `admin_teachers_screen.dart` | `/admin/teachers` | `teachersProvider` | Paginated list, search, create/edit/delete, view assignments |
 | `AdminClassesScreen` | `admin_classes_screen.dart` | `/admin/classes` | `classesProvider` | Paginated list, create/edit/delete, view class students |
 | `AdminSubjectsScreen` | `admin_subjects_screen.dart` | `/admin/subjects` | `subjectsProvider`, `subjectsByClassProvider` | Subject list, group by class, assign to teacher |
 | `AdminExamsScreen` | `admin_exams_screen.dart` | `/admin/exams` | `examsProvider` | Exam list, create/delete, publish toggle, navigate to mark entry |
-| `AdminMarkEntryScreen` | `admin_mark_entry_screen.dart` | `/admin/mark-entry/:examId` | `examSubjectsProvider`, `examClassesProvider`, `marksStateProvider` | Select subject → class → enter marks for students, bulk save |
+| `AdminMarkEntryScreen` | `admin_mark_entry_screen.dart` | `/admin/mark-entry/:examId` | `markEntryExamSubjectsProvider`, `markEntryClassesForFilterProvider`, `markEntryClassStudentsProvider` | Select subject → class → enter marks for students, bulk save |
 | `AdminGradingScreen` | `admin_grading_screen.dart` | `/admin/grading` | `gradingSystemsProvider` | CRUD grading systems with grade ranges |
 | `AdminTimetableScreen` | `admin_timetable_screen.dart` | `/admin/timetable` | `selectedClassProvider`, `timetableEntriesProvider`, `timetableControllerProvider` | Matrix editor (days × periods), create/edit/delete entries |
-| `AdminFeesScreen` | `admin_fees_screen.dart` | `/admin/fees` | `feePostsProvider`, `unpaidFeesProvider`, `feeStructuresProvider` | Fee posts, unpaid fees list, record payments, create fee structures |
+| `AdminFeesScreen` | `admin_fees_screen.dart` | `/admin/fees` | `feePostsProvider`, `unpaidFeesProvider`, `unpaidFilterProvider` | Fee Posts tab + Pending Payments tab, record payments, export to Excel |
 | `AdminAnnouncementsScreen` | `admin_announcements_screen.dart` | `/admin/announcements` | `announcementsProvider` | Paginated list, create/edit/delete, class-targeted or school-wide |
-| `AdminAttendanceReportScreen` | `admin_attendance_report_screen.dart` | `/admin/attendance-report` | `attendanceReportProvider` | Select class + date, view attendance grid |
-| `AdminReportsScreen` | `admin_reports_screen.dart` | `/admin/reports` | — | Dashboard with 5 report types: student strength, attendance, fee collection, teacher workload, admissions. Excel download. |
-| `AdminHolidaysScreen` | `admin_holidays_screen.dart` | `/admin/holidays` | `holidaysProvider` | Holiday/event list, create/edit/delete, recurring toggle |
+| `AdminAttendanceReportScreen` | `admin_attendance_report_screen.dart` | `/admin/attendance-report` | `attendanceReportClassesForFilterProvider`, `attendanceRecordsProvider` | Select class + date, view attendance grid |
+| `AdminReportsScreen` | `admin_reports_screen.dart` | `/admin/reports` | `reportsClassesForFilterProvider`, `reportDataProvider` | Dashboard with 5 report types: student strength, attendance, fee collection, teacher workload, admissions. Excel download. |
+| `AdminHolidaysScreen` | `admin_holidays_screen.dart` | `/admin/holidays` | `adminRepositoryProvider` | Holiday/event list, create/edit/delete, recurring toggle |
 | `AdminPromotionScreen` | `admin_promotion_screen.dart` | `/admin/promotion` | `studentsProvider`, `classesProvider` | Select source class → target class, bulk promote students |
 | `AdminStaffScreen` | `admin_staff_screen.dart` | `/admin/staff` | `staffProvider` | Paginated list, CRUD, department filter |
 | `AdminSettingsScreen` | `admin_settings_screen.dart` | `/admin/settings` | `themeModeProvider`, `schoolProfileProvider` | Theme toggle (light/dark/system), school profile edit, change password |
 | `AdminMoreScreen` | `admin_more_screen.dart` | `/admin/more` | — | Overflow menu for less-used screens |
-| `AdminProxiesScreen` | `admin_proxies_screen.dart` | `/admin/proxies` | `adminProxiesProvider` | View/assign/cancel proxy teachers |
+| `AdminProxiesScreen` | `admin_proxies_screen.dart` | `/admin/proxies` | `adminRepositoryProvider` | View/assign/cancel proxy teachers |
 | `StudentDetailScreen` | `student_detail_screen.dart` | — (push) | — | Full student profile view |
 | `TeacherDetailScreen` | `teacher_detail_screen.dart` | — (push) | — | Full teacher profile + assignments view |
 
@@ -977,7 +973,8 @@ Each screen that loads data defines its own `FutureProvider` or `StateNotifierPr
 - Collapsible sidebar (toggles via `sidebarCollapsedProvider`)
 - Supports both light and dark mode with different color schemes
 - Contains theme toggle button (sun/moon icon)
-- Sections: MAIN (Dashboard, Students, Teachers, Classes), ACADEMIC (Subjects, Exams, Grading, Timetable, Attendance, Reports), ADMINISTRATION (Fees, Announcements, Holidays, Staff, Proxies, Promotion, Settings)
+- Flat navigation list: Dashboard, Students, Promotion, Holidays, Staff, Teachers, Classes, Attendance, Subjects, Exams, Grading, Timetable, Proxies, Reports, Fees, Announcements
+- Footer holds the collapse toggle, theme toggle, Settings (`goNamed(RouteNames.adminSettings)`) and Logout
 - Active route highlighting via `GoRouterState.matchedLocation`
 
 ### Dashboard Widgets
@@ -987,7 +984,6 @@ Each screen that loads data defines its own `FutureProvider` or `StateNotifierPr
 | `DashboardHeader` | `dashboard_header.dart` | Welcome text + school name |
 | `StatsOverviewGrid` | `stats_overview_grid.dart` | Grid of stat cards (students, teachers, classes, attendance %) |
 | `StatsPanel` | `stats_panel.dart` | Detailed stats display |
-| `DashboardChart` | `dashboard_chart.dart` | Attendance trend chart |
 | `QuickActionsGrid` | `quick_actions_grid.dart` | Shortcut buttons to common actions |
 | `RecentActivityFeed` | `recent_activity_feed.dart` | List of recent activities |
 | `AnalyticsSection` | `analytics_section.dart` | Analytics display |

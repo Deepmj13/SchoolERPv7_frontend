@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:school_erp_student/core/logging/app_logger.dart';
 import 'package:school_erp_student/core/storage/storage_interface.dart';
+import 'network_error_io.dart'
+    if (dart.library.html) 'network_error_default.dart' as network_error;
 import 'endpoints.dart';
 
 class ApiException implements Exception {
@@ -156,20 +157,6 @@ class ApiClient {
       AppLogger.api.warning('$method $path timed out (retry=$retryCount)');
       throw ApiException(
           0, 'The server is not responding. Please try again later.');
-    } on SocketException {
-      AppLogger.api.warning('$method $path network error (retry=$retryCount)');
-      if (retryCount < _maxRetries) {
-        await _backoffDelay(retryCount);
-        return _request(method, path,
-            body: body,
-            queryParams: queryParams,
-            timeout: timeout,
-            retryCount: retryCount + 1);
-      }
-      throw ApiException(
-          0,
-          'Cannot connect to the server. Please check your internet '
-          'connection or try again later.');
     } on http.ClientException catch (e) {
       AppLogger.api.warning('$method $path client error: ${e.message} (retry=$retryCount)');
       if (retryCount < _maxRetries) {
@@ -182,6 +169,19 @@ class ApiClient {
       }
       throw ApiException(
           0, 'Unable to reach the server. Please try again later.');
+    } on Object catch (e) {
+      final networkMessage = network_error.networkErrorMessage(e);
+      if (networkMessage == null) rethrow;
+      AppLogger.api.warning('$method $path network error (retry=$retryCount)');
+      if (retryCount < _maxRetries) {
+        await _backoffDelay(retryCount);
+        return _request(method, path,
+            body: body,
+            queryParams: queryParams,
+            timeout: timeout,
+            retryCount: retryCount + 1);
+      }
+      throw ApiException(0, networkMessage);
     }
   }
 

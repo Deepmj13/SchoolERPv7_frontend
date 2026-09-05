@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_erp_admin/core/router/route_names.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/theme/theme_mode_provider.dart';
 
@@ -152,7 +153,7 @@ class SidebarNav extends ConsumerWidget {
                 icon: const Icon(Icons.settings_outlined, size: 20),
                 color: secondaryColor,
                 tooltip: 'Settings',
-                onPressed: () => context.go('/admin/settings'),
+                onPressed: () => context.goNamed(RouteNames.adminSettings),
               ),
           ],
         ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_erp_admin/core/router/route_names.dart';
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/custom_button.dart';
@@ -127,7 +128,8 @@ class AdminExamsScreen extends ConsumerWidget {
             if (action == 'subjects') {
               _showSubjectsDialog(context, ref, exam);
             } else if (action == 'marks') {
-              context.push('/admin/mark-entry/${exam.id}');
+              context.pushNamed(RouteNames.adminMarkEntry,
+                pathParameters: {'examId': exam.id});
             } else if (action == 'publish') {
               _togglePublish(context, ref, exam);
             } else if (action == 'delete') {
@@ -860,7 +862,7 @@ class AdminExamsScreen extends ConsumerWidget {
   }
 
   void _showSubjectsDialog(BuildContext context, WidgetRef ref, Exam exam) {
-    final subjectsAsync = ref.watch(examSubjectsProvider(exam.id));
+    final subjectsAsync = ref.watch(examScreenExamSubjectsProvider(exam.id));
 
     showDialog(
       context: context,
@@ -886,7 +888,7 @@ class AdminExamsScreen extends ConsumerWidget {
                             icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.error),
                             onPressed: () async {
                               await ref.read(adminRepositoryProvider).removeExamSubject(exam.id, s.subjectId);
-                              ref.invalidate(examSubjectsProvider(exam.id));
+                              ref.invalidate(examScreenExamSubjectsProvider(exam.id));
                             },
                           ),
                         ))
@@ -936,7 +938,7 @@ class AdminExamsScreen extends ConsumerWidget {
                         'max_marks': 100,
                         'passing_marks': 40,
                       });
-                      ref.invalidate(examSubjectsProvider(exam.id));
+                      ref.invalidate(examScreenExamSubjectsProvider(exam.id));
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
                   );
@@ -950,6 +952,6 @@ class AdminExamsScreen extends ConsumerWidget {
   }
 }
 
-final examSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
+final examScreenExamSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
   return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 30));
 });

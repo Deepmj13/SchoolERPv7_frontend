@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:school_erp_admin/core/connectivity/connectivity_provider.dart';
+import 'package:school_erp_admin/core/router/route_names.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/features/admin/presentation/widgets/back_button_handler.dart';
@@ -25,7 +26,7 @@ class AdminShell extends ConsumerWidget {
 
   void _logout(BuildContext context, WidgetRef ref) {
     ref.read(authStateProvider.notifier).logout();
-    context.go('/login');
+    context.goNamed(RouteNames.login);
   }
 
   Widget _desktopLayout(BuildContext context, WidgetRef ref) {
@@ -456,7 +457,7 @@ class _MobileLayoutState extends State<_MobileLayout> {
           onTap: () {
             Navigator.pop(context);
             widget.ref.read(authStateProvider.notifier).logout();
-            context.go('/login');
+            context.goNamed(RouteNames.login);
           },
         ),
       ),

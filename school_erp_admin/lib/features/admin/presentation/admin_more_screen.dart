@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:school_erp_admin/core/router/route_names.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/glass_card.dart';
 import 'package:school_erp_admin/features/auth/presentation/providers/auth_state_provider.dart';
@@ -64,7 +65,7 @@ class AdminMoreScreen extends ConsumerWidget {
                 label: const Text('Logout'),
                 onPressed: () {
                   ref.read(authStateProvider.notifier).logout();
-                  context.go('/login');
+                  context.goNamed(RouteNames.login);
                 },
               ),
             ),

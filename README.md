@@ -68,14 +68,15 @@ lib/
 │   │   ├── app_theme.dart                 # Material 3 ThemeData (light + dark)
 │   │   └── theme_mode_provider.dart       # Theme toggle persistence (admin only)
 │   └── widgets/                           # Shared reusable UI components
-│       ├── adaptive_layout.dart           # Responsive breakpoint switcher
 │       ├── glass_card.dart                # Glassmorphism card container
 │       ├── custom_button.dart             # Loading-aware button
-│       ├── loading_overlay.dart           # Semi-transparent overlay + spinner
 │       ├── skeleton_loader.dart           # Basic skeleton block
 │       ├── shimmer.dart                   # Shimmer animation wrapper
 │       ├── list_skeleton_loader.dart      # Pre-built list skeleton
 │       ├── change_password_dialog.dart    # Reusable password change dialog
+│       ├── error_retry_widget.dart        # Error state with retry (admin only)
+│       ├── adaptive_layout.dart           # Three-tier responsive switcher (admin only)
+│       ├── loading_overlay.dart           # Semi-transparent overlay + spinner (admin only)
 │       └── (app-specific skeleton loaders)
 └── features/                              # Feature modules
     ├── auth/                              # Authentication (identical across all 3)
@@ -459,9 +460,9 @@ Tests are minimal and located in each app's `test/` directory:
 
 | App | Test Files |
 |-----|-----------|
-| Admin | `widget_test.dart`, `helpers/fake_storage_service.dart`, `helpers/fake_secure_storage.dart`, `features/auth/domain/user_model_test.dart`, `features/admin/domain/admin_models_test.dart` |
-| Student | `widget_test.dart`, `helpers/fake_storage_service.dart`, `features/auth/domain/user_model_test.dart` |
-| Teacher | `widget_test.dart`, `helpers/fake_storage_service.dart`, `core/api/api_client_test.dart`, `features/auth/domain/user_model_test.dart` |
+| Admin | `widget_test.dart`, `features/auth/domain/user_model_test.dart`, `features/admin/domain/admin_models_test.dart` |
+| Student | `widget_test.dart`, `features/auth/domain/user_model_test.dart` |
+| Teacher | `widget_test.dart`, `core/api/api_client_test.dart`, `features/auth/domain/user_model_test.dart` |
 
 Run tests with:
 ```bash

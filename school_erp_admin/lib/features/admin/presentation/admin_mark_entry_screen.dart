@@ -12,15 +12,15 @@ final examDetailProvider = FutureProvider.family<Exam, String>((ref, examId) {
   return ref.read(adminRepositoryProvider).getExam(examId).timeout(const Duration(seconds: 30));
 });
 
-final examSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
+final markEntryExamSubjectsProvider = FutureProvider.family<List<ExamSubject>, String>((ref, examId) {
   return ref.read(adminRepositoryProvider).getExamSubjects(examId).timeout(const Duration(seconds: 30));
 });
 
-final classesForFilterProvider = FutureProvider.family<List<ExamClass>, String>((ref, examId) {
+final markEntryClassesForFilterProvider = FutureProvider.family<List<ExamClass>, String>((ref, examId) {
   return ref.watch(adminRepositoryProvider).getExamClasses(examId).timeout(const Duration(seconds: 30));
 });
 
-final classStudentsProvider = FutureProvider.family<List<Student>, String>((ref, classId) {
+final markEntryClassStudentsProvider = FutureProvider.family<List<Student>, String>((ref, classId) {
   return ref.read(adminRepositoryProvider).getClassStudents(classId).timeout(const Duration(seconds: 30));
 });
 
@@ -79,8 +79,8 @@ class _AdminMarkEntryScreenState extends ConsumerState<AdminMarkEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final examAsync = ref.watch(examDetailProvider(widget.examId));
-    final subjectsAsync = ref.watch(examSubjectsProvider(widget.examId));
-    final classesAsync = ref.watch(classesForFilterProvider(widget.examId));
+    final subjectsAsync = ref.watch(markEntryExamSubjectsProvider(widget.examId));
+    final classesAsync = ref.watch(markEntryClassesForFilterProvider(widget.examId));
     final isMobile = context.isMobile;
 
     return Scaffold(
@@ -172,13 +172,13 @@ class _AdminMarkEntryScreenState extends ConsumerState<AdminMarkEntryScreen> {
   }
 
   Widget _buildMarkTable(bool isMobile) {
-    final studentsAsync = ref.watch(classStudentsProvider(_selectedClassId!));
+    final studentsAsync = ref.watch(markEntryClassStudentsProvider(_selectedClassId!));
 
     return studentsAsync.when(
       loading: () => const ListSkeletonLoader(),
       error: (e, _) => ErrorRetryWidget(
         message: e.toString(),
-        onRetry: () => ref.invalidate(classStudentsProvider(_selectedClassId!)),
+        onRetry: () => ref.invalidate(markEntryClassStudentsProvider(_selectedClassId!)),
       ),
       data: (students) {
         if (students.isEmpty) {

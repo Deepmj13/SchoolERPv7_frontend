@@ -72,7 +72,7 @@ const _reportTypes = [
   ),
 ];
 
-final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
+final reportsClassesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
   return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
@@ -164,7 +164,7 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
   @override
   Widget build(BuildContext context) {
     final isMobile = context.isMobile;
-    final classesAsync = ref.watch(classesForFilterProvider);
+    final classesAsync = ref.watch(reportsClassesForFilterProvider);
     final filterState = ref.watch(_reportFilterStateProvider);
 
     return Scaffold(

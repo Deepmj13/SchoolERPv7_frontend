@@ -22,13 +22,9 @@ class Endpoints {
 
   static const String holidays = '$apiPrefix/holidays';
 
-  static const String timetable = '$apiPrefix/timetable';
-
   static const String notices = '$apiPrefix/announcements';
   static String notice(String id) => '$apiPrefix/announcements/$id';
 
-  static const String classes = '$apiPrefix/classes';
-  static String classById(String id) => '$apiPrefix/classes/$id';
   static String classTimetable(String id) => '$apiPrefix/classes/$id/timetable';
 
   static const String remarks = '$apiPrefix/remarks';

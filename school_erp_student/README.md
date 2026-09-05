@@ -47,14 +47,14 @@ lib/
 │   ├── theme/
 │   │   ├── app_colors.dart
 │   │   └── app_theme.dart
+│   ├── utils/
+│   │   └── date_format.dart
 │   └── widgets/
-│       ├── adaptive_layout.dart
 │       ├── change_password_dialog.dart
 │       ├── custom_button.dart
 │       ├── dashboard_skeleton_loader.dart
 │       ├── glass_card.dart
 │       ├── list_skeleton_loader.dart
-│       ├── loading_overlay.dart
 │       ├── profile_skeleton_loader.dart
 │       ├── shimmer.dart
 │       └── skeleton_loader.dart
@@ -171,9 +171,7 @@ class SchoolErpStudentApp extends ConsumerWidget {
 | `changePassword` | `/api/v1/auth/change-password` |
 | `assignments` | `/api/v1/assignments` |
 | `holidays` | `/api/v1/holidays` |
-| `timetable` | `/api/v1/timetable` |
 | `notices` | `/api/v1/announcements` |
-| `classes` | `/api/v1/classes` |
 | `remarks` | `/api/v1/remarks` |
 
 **Dynamic endpoint methods:**
@@ -186,16 +184,15 @@ class SchoolErpStudentApp extends ConsumerWidget {
 | `studentFees(id)` | `/api/v1/fees/student/$id` |
 | `assignment(id)` | `/api/v1/assignments/$id` |
 | `notice(id)` | `/api/v1/announcements/$id` |
-| `classById(id)` | `/api/v1/classes/$id` |
 | `classTimetable(id)` | `/api/v1/classes/$id/timetable` |
 | `studentRemarks(id)` | `/api/v1/remarks/student/$id` |
 | `markRemarkRead(id)` | `/api/v1/remarks/$id/read` |
 
 ### Storage (`core/storage/`)
 
-**Keys used:** `jwt_token`, `user_profile`, `theme_mode`.
+**Keys used:** `jwt_token`, `user_profile`.
 
-**`StorageInterface` methods:** `saveToken`, `getToken`, `saveUser`, `getUser`, `saveThemeMode`, `getThemeMode`, `clear`.
+**`StorageInterface` methods:** `saveToken`, `getToken`, `saveUser`, `getUser`, `clear`.
 
 ### Router (`core/router/`)
 
@@ -245,17 +242,19 @@ Identical to admin except:
 - **No** `theme_mode_provider.dart` — student app uses `ThemeMode.system` only
 - **No** additional color tokens — uses the base 16-color palette from the root README
 
-### Responsive Layout (`core/widgets/adaptive_layout.dart`)
+### Responsive Layout (in `student_shell.dart`)
 
-Two-tier only: `mobile` (< 800px) and `desktop` (>= 800px). No `tablet` tier, no `ResponsiveContext` extension.
+Two-tier only: `mobile` (< 800px) and `desktop` (>= 800px). No `tablet` tier, no `ResponsiveContext` extension. The `StudentShell` switches between bottom navigation (mobile) and sidebar (desktop) based on `LayoutBuilder` max width.
 
 ### Shared Widgets
 
-Same set as admin minus `ErrorRetryWidget` (student uses `Shimmer` + `ListSkeletonLoader` instead).
+Common set across apps: `GlassCard`, `CustomButton`, `SkeletonLoader`, `Shimmer`, `ListSkeletonLoader`, `ChangePasswordDialog`.
 
 Additional student-only widgets:
 - `DashboardSkeletonLoader` — skeleton for dashboard layout
 - `ProfileSkeletonLoader` — skeleton for profile page
+
+(Student intentionally omits admin-only widgets `AdaptiveLayout`, `LoadingOverlay`, and `ErrorRetryWidget`; student uses `Shimmer` + `ListSkeletonLoader` for loading states.)
 
 ---
 
@@ -473,12 +472,12 @@ All in `features/student/data/student_repository.dart` (10 methods total).
 
 | Screen | File | Route | Providers Watched | Key Features |
 |--------|------|-------|-------------------|--------------|
-| `StudentShell` | `student_shell.dart` | ShellRoute wrapper | `connectivityProvider` | Two-tier layout (800px breakpoint). Desktop: sidebar. Mobile: bottom nav. Online/offline banner. |
+| `StudentShell` | `student_shell.dart` | ShellRoute wrapper | — | Two-tier layout (800px breakpoint). Desktop: sidebar (Dashboard, Attendance, Results, Timetable, Fees, Assignments, Notices, Remarks, Holidays, Profile). Mobile: bottom nav (Home, Attendance, Timetable, More). |
 | `LoginScreen` | `login_screen.dart` | `/login` | `authStateProvider`, `connectivityProvider` | Email/password form, student role validation |
 | `StudentDashboardScreen` | `student_dashboard_screen.dart` | `/student/dashboard` | `studentDashboardProvider` | Greeting, attendance summary card, recent notices list, quick links |
-| `StudentAttendanceScreen` | `student_attendance_screen.dart` | `/student/attendance` | `attendancePageProvider`, `attendanceOverviewProvider` | Monthly summary + detailed attendance records, calendar-style display |
-| `StudentResultsScreen` | `student_results_screen.dart` | `/student/results` | `studentResultsProvider` | Exam results grouped by exam, marks/grade display |
-| `StudentTimetableScreen` | `student_timetable_screen.dart` | `/student/timetable` | `studentTimetableProvider` | Weekly timetable grid, proxy teacher indicators |
+| `StudentAttendanceScreen` | `student_attendance_screen.dart` | `/student/attendance` | `attendancePageProvider`, `attendanceOverviewProvider` | Overall summary card (percentage + present/absent/total) + list of individual attendance records with status badges |
+| `StudentResultsScreen` | `student_results_screen.dart` | `/student/results` | `studentResultsProvider` | Flat list of result cards (exam name, marks, grade); results are per-entry, not grouped by exam |
+| `StudentTimetableScreen` | `student_timetable_screen.dart` | `/student/timetable` | `studentTimetableProvider` | Day selector chips (Mon–Sat) + list of timetable entries for the selected day; "Today" badge and ongoing-class indicator; proxy badges on proxy slots |
 | `StudentFeesScreen` | `student_fees_screen.dart` | `/student/fees` | `studentFeesProvider` | Fee posts with paid/pending breakdown, total paid/pending amounts, navigate to detail |
 | `StudentFeePostDetailScreen` | `student_fee_post_detail_screen.dart` | `/student/fees/:id` | — | Individual fee post detail with structure breakdown |
 | `StudentAssignmentsScreen` | `student_assignments_screen.dart` | `/student/assignments` | `studentAssignmentsProvider` | Assignment list with status badges, navigate to detail |
@@ -571,7 +570,7 @@ Fixed-width dark sidebar (260px). Navigation items: Dashboard, Attendance, Resul
 
 ### Bottom Navigation (`widgets/student_bottom_nav.dart`)
 
-Mobile bottom `NavigationBar` with 5 items: Dashboard, Attendance, Timetable, Notices, Profile. Additional items accessible via "More" overflow.
+Mobile bottom `NavigationBar` with 4 destinations: Home, Attendance, Timetable, and More (overflow menu with Results, Fees, Assignments, Notices, Remarks, Holidays, Profile).
 
 ### Back Button Handler (`widgets/back_button_handler.dart`)
 

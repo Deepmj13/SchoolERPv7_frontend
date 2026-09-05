@@ -12,7 +12,6 @@ class Endpoints {
   static const String changePassword = '$apiPrefix/auth/change-password';
 
   static const String classes = '$apiPrefix/classes';
-  static String classById(String id) => '$apiPrefix/classes/$id';
   static String classStudents(String id) => '$apiPrefix/classes/$id/students';
   static String classTimetable(String id) =>
       '$apiPrefix/classes/$id/timetable';
@@ -25,39 +24,24 @@ class Endpoints {
 
   static const String attendanceMark = '$apiPrefix/attendance/mark';
   static const String attendance = '$apiPrefix/attendance';
-  static String attendanceRecord(String id) => '$apiPrefix/attendance/$id';
-  static String studentAttendance(String id) =>
-      '$apiPrefix/attendance/student/$id';
 
   static const String exams = '$apiPrefix/exams';
   static const String subjects = '$apiPrefix/subjects';
   static const String marksBulk = '$apiPrefix/results/bulk';
-  static const String results = '$apiPrefix/results';
   static String resultsByExam(String examId, String subjectId, {String? classId}) =>
       '$apiPrefix/results?examId=$examId&subjectId=$subjectId${classId != null ? '&classId=$classId' : ''}';
 
   static const String announcements = '$apiPrefix/announcements';
-  static String announcement(String id) => '$apiPrefix/announcements/$id';
   static String teacherAnnouncements(String id) =>
       '$apiPrefix/announcements/teacher/$id';
 
   static const String assignments = '$apiPrefix/assignments';
-  static String assignment(String id) => '$apiPrefix/assignments/$id';
   static String assignmentSubmissions(String id) =>
       '$apiPrefix/assignments/$id/submissions';
 
   static const String holidays = '$apiPrefix/holidays';
 
-  static const String timetable = '$apiPrefix/timetable';
-  static String timetableEntry(String id) => '$apiPrefix/timetable/$id';
-
   static const String proxyAssign = '$apiPrefix/proxy/assign';
-  static String proxyRespond(String id) => '$apiPrefix/proxy/$id/respond';
-  static String proxyCancel(String id) => '$apiPrefix/proxy/$id';
-  static const String proxyMy = '$apiPrefix/proxy/my';
-  static const String proxyPending = '$apiPrefix/proxy/pending';
-  static String proxyTodayForClass(String classId) =>
-      '$apiPrefix/proxy/today?classId=$classId';
   static String proxyAvailable(String timetableId, {String? date}) =>
       '$apiPrefix/proxy/available?timetableId=$timetableId'
       '${date != null ? '&date=$date' : ''}';

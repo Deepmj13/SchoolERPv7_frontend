@@ -110,6 +110,7 @@ class StudentShell extends ConsumerWidget {
         route == '/student/assignments' ||
         route == '/student/notices' ||
         route == '/student/holidays' ||
+        route == '/student/remarks' ||
         route == '/student/profile') {
       return 3;
     }

@@ -6,7 +6,7 @@ import 'package:school_erp_admin/features/admin/domain/admin_models.dart';
 import 'package:school_erp_admin/features/admin/presentation/widgets/data_table_widget.dart';
 import 'package:school_erp_admin/features/admin/presentation/providers/admin_repository_provider.dart';
 
-final classesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
+final attendanceReportClassesForFilterProvider = FutureProvider<List<ClassModel>>((ref) {
   return ref.watch(adminRepositoryProvider).getClasses().timeout(const Duration(seconds: 30));
 });
 
@@ -39,13 +39,13 @@ class _AdminAttendanceReportScreenState
     if (_selectedClassId != null && _selectedDate != null) {
       ref.invalidate(attendanceRecordsProvider(_selectedClassId!));
     } else {
-      ref.invalidate(classesForFilterProvider);
+      ref.invalidate(attendanceReportClassesForFilterProvider);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final classesAsync = ref.watch(classesForFilterProvider);
+    final classesAsync = ref.watch(attendanceReportClassesForFilterProvider);
     final isMobile = context.isMobile;
 
     return Scaffold(

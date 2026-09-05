@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:school_erp_student/core/theme/app_colors.dart';
+import 'package:school_erp_student/core/utils/date_format.dart';
 import 'package:school_erp_student/core/widgets/list_skeleton_loader.dart';
 import 'package:school_erp_student/features/student/domain/student_models.dart';
 import 'package:school_erp_student/features/student/presentation/providers/student_remarks_provider.dart';
@@ -197,7 +198,8 @@ class StudentRemarksScreen extends ConsumerWidget {
                     Row(
                       children: [
                         Text(
-                          _formatDate(remark.createdAt),
+                          formatDateFromIso(remark.createdAt,
+                              style: DateFormatStyle.shortDayFirst),
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppColors.textSecondary,
@@ -365,7 +367,8 @@ class StudentRemarksScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _formatDate(remark.createdAt),
+                    formatDateFromIso(remark.createdAt,
+                        style: DateFormatStyle.shortDayFirst),
                     style: const TextStyle(
                       fontSize: 13,
                       color: AppColors.textSecondary,
@@ -385,28 +388,5 @@ class StudentRemarksScreen extends ConsumerWidget {
         );
       },
     );
-  }
-
-  String _formatDate(String iso) {
-    try {
-      final dt = DateTime.parse(iso);
-      final months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
-    } catch (_) {
-      return iso;
-    }
   }
 }

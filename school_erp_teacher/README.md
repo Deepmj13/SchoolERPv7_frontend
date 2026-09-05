@@ -48,13 +48,11 @@ lib/
 │   │   ├── app_colors.dart
 │   │   └── app_theme.dart
 │   └── widgets/
-│       ├── adaptive_layout.dart
 │       ├── change_password_dialog.dart
 │       ├── custom_button.dart
 │       ├── dashboard_skeleton_loader.dart
 │       ├── glass_card.dart
 │       ├── list_skeleton_loader.dart
-│       ├── loading_overlay.dart
 │       ├── profile_skeleton_loader.dart
 │       ├── shimmer.dart
 │       └── skeleton_loader.dart
@@ -80,7 +78,7 @@ lib/
 │           ├── teacher_notices_screen.dart
 │           ├── teacher_holidays_screen.dart
 │           ├── teacher_remarks_screen.dart
-│           ├── teacher_profile_screen_screen.dart
+│           ├── teacher_profile_screen.dart
 │           ├── providers/
 │           │   ├── teacher_attendance_provider.dart
 │           │   ├── teacher_assignments_provider.dart
@@ -170,38 +168,25 @@ class SchoolErpTeacherApp extends ConsumerWidget {
 | `announcements` | `/api/v1/announcements` |
 | `assignments` | `/api/v1/assignments` |
 | `holidays` | `/api/v1/holidays` |
-| `timetable` | `/api/v1/timetable` |
 | `attendance` | `/api/v1/attendance` |
 | `attendanceMark` | `/api/v1/attendance/mark` |
 | `marksBulk` | `/api/v1/results/bulk` |
-| `results` | `/api/v1/results` |
 | `proxyAssign` | `/api/v1/proxy/assign` |
-| `proxyMy` | `/api/v1/proxy/my` |
-| `proxyPending` | `/api/v1/proxy/pending` |
 | `remarks` | `/api/v1/remarks` |
 
 **Dynamic endpoint methods:**
 
 | Method | Value |
 |--------|-------|
-| `classById(id)` | `/api/v1/classes/$id` |
 | `classStudents(id)` | `/api/v1/classes/$id/students` |
 | `classTimetable(id)` | `/api/v1/classes/$id/timetable` |
 | `teacherClasses(id)` | `/api/v1/teachers/$id/classes` |
 | `teacherClassTeacherClass(id)` | `/api/v1/teachers/$id/class-teacher-class` |
 | `teacherProfile(id)` | `/api/v1/teachers/$id` |
 | `teacherTimetable(id)` | `/api/v1/teachers/$id/timetable` |
-| `attendanceRecord(id)` | `/api/v1/attendance/$id` |
-| `studentAttendance(id)` | `/api/v1/attendance/student/$id` |
 | `resultsByExam(examId, subjectId, {classId?})` | `/api/v1/results?examId=$examId&subjectId=$subjectId[&classId=$classId]` |
-| `announcement(id)` | `/api/v1/announcements/$id` |
 | `teacherAnnouncements(id)` | `/api/v1/announcements/teacher/$id` |
-| `assignment(id)` | `/api/v1/assignments/$id` |
 | `assignmentSubmissions(id)` | `/api/v1/assignments/$id/submissions` |
-| `timetableEntry(id)` | `/api/v1/timetable/$id` |
-| `proxyRespond(id)` | `/api/v1/proxy/$id/respond` |
-| `proxyCancel(id)` | `/api/v1/proxy/$id` |
-| `proxyTodayForClass(classId)` | `/api/v1/proxy/today?classId=$classId` |
 | `proxyAvailable(timetableId, {date?})` | `/api/v1/proxy/available?timetableId=$timetableId[&date=$date]` |
 | `teacherRemarks(id)` | `/api/v1/remarks/teacher/$id` |
 | `teacherRemarksForStudent(teacherId, studentId)` | `/api/v1/remarks/teacher/$teacherId/student/$studentId` |
@@ -209,7 +194,7 @@ class SchoolErpTeacherApp extends ConsumerWidget {
 
 ### Storage (`core/storage/`)
 
-Same as student/admin.
+Same as student: `StorageInterface` with `saveToken`, `getToken`, `saveUser`, `getUser`, `clear` over `flutter_secure_storage` (keys `jwt_token`, `user_profile`). No theme-mode persistence (admin-only).
 
 ### Router (`core/router/`)
 
@@ -255,13 +240,13 @@ Same as student/admin.
 
 Identical to student — base color palette, `ThemeMode.system` only, no additional tokens.
 
-### Responsive Layout (`core/widgets/adaptive_layout.dart`)
+### Responsive Layout (in `teacher_shell.dart`)
 
-Two-tier: `mobile` (< 800px) and `desktop` (>= 800px). Same as student.
+Two-tier: `mobile` (< 800px) and `desktop` (>= 800px). Same as student. The `TeacherShell` switches between bottom navigation (mobile) and sidebar (desktop) based on `LayoutBuilder` max width.
 
 ### Shared Widgets
 
-Same set as student: `GlassCard`, `CustomButton`, `LoadingOverlay`, `SkeletonLoader`, `Shimmer`, `ListSkeletonLoader`, `ChangePasswordDialog`, `DashboardSkeletonLoader`, `ProfileSkeletonLoader`.
+Same set as student: `GlassCard`, `CustomButton`, `SkeletonLoader`, `Shimmer`, `ListSkeletonLoader`, `ChangePasswordDialog`, `DashboardSkeletonLoader`, `ProfileSkeletonLoader`.
 
 ---
 
@@ -470,15 +455,7 @@ All in `features/teacher/domain/teacher_models.dart`.
 
 ### MarkEntry
 
-| Field | Type | Required | Mutable | Default |
-|-------|------|----------|---------|---------|
-| `studentId` | `String` | yes | no | — |
-| `studentName` | `String` | yes | no | — |
-| `rollNumber` | `String?` | no | no | — |
-| `marksObtained` | `double` | no | **yes** | `0` |
-| `totalMarks` | `double` | no | **yes** | `100` |
-
-**Note:** No `fromJson` — constructed locally from student data. Mutable fields for teacher input.
+Removed in Phase 3 dead-code cleanup (unused local model). Marks are entered per-student via `MarksState.marks` (`Map<String, double>`).
 
 ### Holiday
 
@@ -497,9 +474,7 @@ Same as admin/student.
 
 ### ProxyAssignment
 
-Same as admin. 19 fields. See admin README for full field list.
-
-**Computed:** `classDisplay`, `dayLabel`, `statusLabel`, `isPending`, `isAccepted`, `isRejected`, `isCancelled`.
+Removed in Phase 3 dead-code cleanup. Proxy data is handled as raw maps via `getAvailableTeachers`; see the admin app for the proxy-management model.
 
 ---
 
@@ -605,12 +580,8 @@ All in `features/teacher/data/teacher_repository.dart` (32 methods total).
 
 | Method | Signature | HTTP | Endpoint |
 |--------|-----------|------|----------|
-| `getMyProxies` | `()` → `Future<List<ProxyAssignment>>` | GET | `/api/v1/proxy/my` |
-| `getPendingProxies` | `()` → `Future<List<ProxyAssignment>>` | GET | `/api/v1/proxy/pending` |
-| `assignProxy` | `(String timetableId, String proxyTeacherId, String? reason, {String? date})` → `Future<ProxyAssignment>` | POST | `/api/v1/proxy/assign` |
-| `respondToProxy` | `(String proxyId, String status)` → `Future<ProxyAssignment>` | PATCH | `/api/v1/proxy/$proxyId/respond` |
-| `cancelProxy` | `(String proxyId)` → `Future<void>` | DELETE | `/api/v1/proxy/$proxyId` |
-| `getAvailableTeachers` | `(String timetableId, {String? date})` → `Future<List<Map<String, dynamic>>>` | GET | `/api/v1/proxy/available?timetableId=...[&date=...]` |
+| `assignProxy` | `(String timetableId, String proxyTeacherId, String? reason, {String? date})` → `Future<void>` | POST | `/api/v1/proxy/assign` |
+| `getAvailableTeachers` | `(String timetableId, {String? date})` → `Future<List<Map<String, dynamic>>>` | GET | `/api/v1/proxy/available?timetableId=$timetableId[&date=$date]` |
 
 ---
 
@@ -618,19 +589,19 @@ All in `features/teacher/data/teacher_repository.dart` (32 methods total).
 
 | Screen | File | Route | Providers Watched | Key Features |
 |--------|------|-------|-------------------|--------------|
-| `TeacherShell` | `teacher_shell.dart` | ShellRoute wrapper | `connectivityProvider` | Two-tier layout (800px). Desktop: sidebar. Mobile: bottom nav. |
+| `TeacherShell` | `teacher_shell.dart` | ShellRoute wrapper | — | Two-tier layout (800px). Desktop: sidebar (Dashboard, Attendance, Assignments, Marks, Announcements, Remarks, Notices, Holidays, Profile). Mobile: bottom nav (Home, Attendance, More). Timetable is reachable via dashboard/timetable button, not the sidebar. |
 | `LoginScreen` | `login_screen.dart` | `/login` | `authStateProvider`, `connectivityProvider` | Email/password form, teacher role validation |
 | `TeacherDashboardScreen` | `teacher_dashboard_screen.dart` | `/teacher/dashboard` | `teacherDashboardProvider` | Greeting, assigned classes, today's schedule, class teacher info |
 | `TeacherAttendanceScreen` | `teacher_attendance_screen.dart` | `/teacher/attendance` | `attendanceStateProvider` | Select class → date → mark present/absent for each student → submit |
 | `TeacherMarksScreen` | `teacher_marks_screen.dart` | `/teacher/marks` | `marksStateProvider` | Select class → exam → subject → enter marks per student → submit |
-| `TeacherTimetableScreen` | `teacher_timetable_screen.dart` | `/teacher/timetable` | `teacherTimetableProvider` | Weekly timetable view, proxy indicators |
+| `TeacherTimetableScreen` | `teacher_timetable_screen.dart` | `/teacher/timetable` | `teacherTimetableProvider`, `selectedDayProvider` | Day selector chips (Mon–Sat) + list of timetable entries for the selected day; "Today" badge, ongoing-class indicator, proxy badges |
 | `TeacherAnnouncementsScreen` | `teacher_announcements_screen.dart` | `/teacher/announcements` | `teacherAnnouncementsProvider` | View announcements + create new (title, body, optional class targeting) |
 | `TeacherAssignmentsScreen` | `teacher_assignments_screen.dart` | `/teacher/assignments` | `assignmentsStateProvider` | View assignments, create new, select to view submissions |
 | `TeacherAssignmentDetailScreen` | `teacher_assignment_detail_screen.dart` | `/teacher/assignments/:id` | `assignmentsStateProvider` | View submissions, mark status (submitted/pending), add remarks, bulk save |
 | `TeacherNoticesScreen` | `teacher_notices_screen.dart` | `/teacher/notices` | `teacherNoticesProvider` | General announcements/notices list |
-| `TeacherHolidaysScreen` | `teacher_holidays_screen.dart` | `/teacher/holidays` | `teacherHolidaysProvider` | Holiday/event list |
+| `TeacherHolidaysScreen` | `teacher_holidays_screen.dart` | `/teacher/holidays` | `_holidaysProvider` (private, in-file) | Holiday/event list |
 | `TeacherRemarksScreen` | `teacher_remarks_screen.dart` | `/teacher/remarks` | `remarksStateProvider` | Select class → student → write/edit/delete remarks, view all remarks |
-| `TeacherProfileScreen` | `teacher_profile_screen_screen.dart` | `/teacher/profile` | `teacherProfileProvider` | Profile info, change password |
+| `TeacherProfileScreen` | `teacher_profile_screen.dart` | `/teacher/profile` | `teacherProfileProvider` | Profile info, change password |
 
 ---
 
@@ -765,17 +736,13 @@ final teacherRepositoryProvider = Provider<TeacherRepository>((ref) {
 
 | Provider | Type | State | Description |
 |----------|------|-------|-------------|
-| `myProxiesProvider` | `FutureProvider.autoDispose<List<ProxyAssignment>>` | `List<ProxyAssignment>` | Proxy assignments where teacher is the designated proxy |
-| `pendingProxiesProvider` | `FutureProvider.autoDispose<List<ProxyAssignment>>` | `List<ProxyAssignment>` | Pending proxy requests for the teacher |
-| `proxyControllerProvider` | `StateNotifierProvider<ProxyController, AsyncValue<void>>` | `AsyncValue<void>` | Proxy CRUD operations |
+| `proxyControllerProvider` | `StateNotifierProvider<ProxyController, AsyncValue<void>>` | `AsyncValue<void>` | Proxy assignment + available-teacher operations |
 
 **`ProxyController` methods:**
 
 | Method | Description |
 |--------|-------------|
-| `assignProxy(timetableId, proxyTeacherId, reason, {date?})` | Assigns a proxy, invalidates `myProxiesProvider` |
-| `respondToProxy(proxyId, status)` | Accepts/rejects, invalidates both providers |
-| `cancelProxy(proxyId)` | Cancels, invalidates `myProxiesProvider` |
+| `assignProxy(timetableId, proxyTeacherId, reason, {date?})` | Assigns a proxy for a timetable slot |
 | `getAvailableTeachers(timetableId, {date?})` | Returns list of available teachers |
 
 ### Remarks
@@ -826,11 +793,13 @@ final teacherRepositoryProvider = Provider<TeacherRepository>((ref) {
 
 ### Sidebar Navigation (`widgets/teacher_sidebar_nav.dart`)
 
-Fixed-width dark sidebar (260px). Navigation items: Dashboard, Attendance, Marks, Timetable, Announcements, Assignments, Notices, Remarks, Holidays, Profile.
+Fixed-width dark sidebar (260px). Navigation items: Dashboard, Attendance, Assignments, Marks, Announcements, Remarks, Notices, Holidays, Profile.
+
+> **Note:** Timetable is intentionally omitted from the sidebar — it is reached via the dashboard's "View Full Timetable" button.
 
 ### Bottom Navigation (`widgets/teacher_bottom_nav.dart`)
 
-Mobile `NavigationBar` with 5 items: Dashboard, Attendance, Marks, Assignments, Profile. Additional items via "More".
+Mobile `NavigationBar` with 3 items: Home, Attendance, More (overflow menu). Additional items (assignments, marks, remarks, holidays, announcements, notices, profile) via "More".
 
 ### Back Button Handler (`widgets/back_button_handler.dart`)
 
@@ -901,7 +870,6 @@ Hardware back button handling for Android/web.
 
 The proxy system is already fully implemented. To modify:
 
-1. Edit `ProxyAssignment` model fields in `domain/teacher_models.dart`
-2. Edit repository methods in `data/teacher_repository.dart` (6 proxy methods)
-3. Edit `teacher_proxy_provider.dart` — `ProxyController` methods
-4. Proxy UI is accessible from the teacher dashboard's quick actions or timetable screen
+1. Edit repository methods in `data/teacher_repository.dart` (proxy assign + available teachers)
+2. Edit `teacher_proxy_provider.dart` — `ProxyController` methods
+3. Proxy UI is accessible from the teacher dashboard's quick actions or timetable screen

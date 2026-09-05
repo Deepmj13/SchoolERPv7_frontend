@@ -28,15 +28,18 @@ final studentDashboardProvider =
     final records = await repo.getAttendance(studentId);
     if (records.isNotEmpty) {
       final total = records.length;
+      final late =
+          records.where((r) => r.status == 'late').length;
       final present =
           records.where((r) => r.status == 'present').length;
-      final absent = total - present;
+      final presentable = present + late;
+      final absent = total - presentable;
       attendanceSummary = AttendanceSummary(
         month: '',
         total: total,
-        present: present,
+        present: presentable,
         absent: absent,
-        percentage: total > 0 ? (present / total) * 100 : 0,
+        percentage: total > 0 ? (presentable / total) * 100 : 0,
       );
     }
   } catch (e) {

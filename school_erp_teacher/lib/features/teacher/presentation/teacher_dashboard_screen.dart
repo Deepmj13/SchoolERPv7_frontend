@@ -216,11 +216,13 @@ Widget _quickAttendanceCard(
       break;
     }
   }
-  if (matchingClass == null && assignedClasses.isNotEmpty) {
-    matchingClass = assignedClasses.firstWhere(
-      (tc) => tc.classId == target.classId,
-      orElse: () => assignedClasses.first,
-    );
+  if (matchingClass == null) {
+    for (final tc in assignedClasses) {
+      if (tc.classId == target.classId) {
+        matchingClass = tc;
+        break;
+      }
+    }
   }
 
   return GlassCard(
