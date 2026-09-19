@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:school_erp_admin/core/logging/app_logger.dart';
 import 'package:school_erp_admin/core/storage/storage_interface.dart';
-import 'network_error_io.dart'
-    if (dart.library.html) 'network_error_default.dart' as network_error;
+import 'network_error_default.dart'
+    if (dart.library.io) 'network_error_io.dart' as network_error;
 import 'endpoints.dart';
 
 class ApiException implements Exception {

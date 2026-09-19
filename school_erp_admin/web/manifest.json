@@ -1,12 +1,12 @@
 {
-    "name": "school_erp_admin",
-    "short_name": "school_erp_admin",
+    "name": "School ERP Admin",
+    "short_name": "ERP Admin",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "description": "School management admin portal for administrators",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

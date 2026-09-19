@@ -1,12 +1,12 @@
 {
-    "name": "school_erp_student",
-    "short_name": "school_erp_student",
+    "name": "School ERP Student",
+    "short_name": "ERP Student",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "description": "School management student portal for students",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

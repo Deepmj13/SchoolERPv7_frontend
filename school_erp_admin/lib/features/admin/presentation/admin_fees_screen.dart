@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:excel/excel.dart' hide Border;
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:school_erp_admin/core/platform/file_export_service_default.dart'
+    if (dart.library.io) 'package:school_erp_admin/core/platform/file_export_service_io.dart'
+    as file_export;
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/custom_button.dart';
@@ -1032,12 +1033,11 @@ class _AdminFeesScreenState extends ConsumerState<AdminFeesScreen>
       String? result;
       if (fileName != null) {
         final name = fileName.endsWith('.xlsx') ? fileName : '$fileName.xlsx';
-        final dir = await getExternalStorageDirectory();
-        if (dir != null) {
-          final file = File('${dir.path}/$name');
-          await file.writeAsBytes(fileBytes);
-          result = file.path;
-        }
+        result = await file_export.saveFile(
+          fileBytes,
+          name,
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        );
       }
 
       if (result != null && mounted) {

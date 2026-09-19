@@ -1,8 +1,9 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:school_erp_admin/core/api/endpoints.dart';
+import 'package:school_erp_admin/core/platform/file_export_service_default.dart'
+    if (dart.library.io) 'package:school_erp_admin/core/platform/file_export_service_io.dart'
+    as file_export;
 import 'package:school_erp_admin/core/widgets/adaptive_layout.dart';
 import 'package:school_erp_admin/core/theme/app_colors.dart';
 import 'package:school_erp_admin/core/widgets/error_retry_widget.dart';
@@ -137,15 +138,17 @@ class _AdminReportsScreenState extends ConsumerState<AdminReportsScreen> {
         format: format,
       );
 
-      final dir = await getApplicationDocumentsDirectory();
       final ext = format == 'excel' ? 'xlsx' : 'pdf';
-      final file = File('${dir.path}/${type.id}_report.$ext');
-      await file.writeAsBytes(bytes);
+      final fileName = '${type.id}_report.$ext';
+      final mimeType = format == 'excel'
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+          : 'application/pdf';
+      final savedTo = await file_export.saveFile(bytes, fileName, mimeType);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${format.toUpperCase()} saved to ${file.path}'),
+          content: Text('${format.toUpperCase()} saved to $savedTo'),
           behavior: SnackBarBehavior.floating,
         ),
       );
