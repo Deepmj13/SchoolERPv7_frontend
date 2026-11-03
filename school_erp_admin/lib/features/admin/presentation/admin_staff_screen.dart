@@ -37,6 +37,7 @@ class _AdminStaffScreenState extends ConsumerState<AdminStaffScreen> {
     final salaryCtrl = TextEditingController(text: existing?.salary?.toString() ?? '');
     final joinDateCtrl = TextEditingController(text: existing?.joiningDate ?? '');
     final emailCtrl = TextEditingController(text: existing?.email ?? '');
+    final passwordCtrl = TextEditingController();
     bool isActive = existing?.isActive ?? true;
     bool saving = false;
 
@@ -51,6 +52,12 @@ class _AdminStaffScreenState extends ConsumerState<AdminStaffScreen> {
               children: [
                 if (existing == null) ...[
                   TextField(controller: emailCtrl, decoration: const InputDecoration(labelText: 'Email *', border: OutlineInputBorder())),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passwordCtrl,
+                    obscureText: true,
+                    decoration: const InputDecoration(labelText: 'Password *', border: OutlineInputBorder()),
+                  ),
                   const SizedBox(height: 12),
                 ],
                 TextField(controller: fullNameCtrl, decoration: const InputDecoration(labelText: 'Full Name *', border: OutlineInputBorder())),
@@ -81,7 +88,7 @@ class _AdminStaffScreenState extends ConsumerState<AdminStaffScreen> {
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
             ElevatedButton(
               onPressed: saving ? null : () async {
-                if (fullNameCtrl.text.trim().isEmpty || (existing == null && emailCtrl.text.trim().isEmpty)) return;
+                if (fullNameCtrl.text.trim().isEmpty || (existing == null && (emailCtrl.text.trim().isEmpty || passwordCtrl.text.trim().isEmpty))) return;
                 setDialogState(() { saving = true; });
                 try {
                   final repo = ref.read(adminRepositoryProvider);
@@ -120,7 +127,7 @@ class _AdminStaffScreenState extends ConsumerState<AdminStaffScreen> {
                       salary: salary,
                       joiningDate: joiningDate,
                       isActive: true,
-                    ).toCreateJson();
+                    ).toCreateJson(password: passwordCtrl.text.trim());
                     await repo.createStaff(body);
                   }
                   if (ctx.mounted) Navigator.pop(ctx, true);

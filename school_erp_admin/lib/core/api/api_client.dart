@@ -120,7 +120,7 @@ class ApiClient {
         if (token != null) {
           final refreshed = await _tryRefreshToken();
           if (refreshed) {
-            return _request(method, path,
+            return await _request(method, path,
                 body: body,
                 queryParams: queryParams,
                 timeout: timeout,
@@ -135,7 +135,7 @@ class ApiClient {
       if (_isTransientStatusCode(response.statusCode) &&
           retryCount < _maxRetries) {
         await _backoffDelay(retryCount);
-        return _request(method, path,
+        return await _request(method, path,
             body: body,
             queryParams: queryParams,
             timeout: timeout,

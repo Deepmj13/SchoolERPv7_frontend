@@ -466,7 +466,7 @@ context.isDesktop  // width >= 1100
 
 ## Domain Models
 
-All models are in `features/admin/domain/admin_models.dart`. Global constant: `defaultUserPassword = 'ChangeMe@123'`.
+All models are in `features/admin/domain/admin_models.dart`. New accounts require the admin to supply a password; no shared default password is used.
 
 ### SchoolProfile
 
@@ -512,7 +512,7 @@ All models are in `features/admin/domain/admin_models.dart`. Global constant: `d
 | `classSection` | `String?` | `class_section` | no |
 
 **Methods:**
-- `toCreateJson()` — `{full_name, email, password: defaultUserPassword, class_id, roll_number, parent_name, parent_phone}`
+- `toCreateJson({required String password})` — `{full_name, email, password, class_id, roll_number, parent_name, parent_phone}`
 - `toUpdateJson()` — `{full_name, class_id, roll_number, parent_name, parent_phone, is_active}`
 
 ### Teacher
@@ -527,7 +527,7 @@ All models are in `features/admin/domain/admin_models.dart`. Global constant: `d
 | `email` | `String?` | `email` | no |
 
 **Methods:**
-- `toCreateJson()` — `{full_name, email, password: defaultUserPassword, phone}`
+- `toCreateJson({required String password})` — `{full_name, email, password, phone}`
 - `toUpdateJson()` — `{full_name, phone, is_active}`
 
 ### TeacherAssignment
@@ -710,7 +710,7 @@ All models are in `features/admin/domain/admin_models.dart`. Global constant: `d
 | `isActive` | `bool` | `is_active` | yes |
 
 **Methods:**
-- `toCreateJson()` — `{email, password: defaultUserPassword, full_name, phone, department, designation, salary, joining_date}`
+- `toCreateJson({required String password})` — `{email, password, full_name, phone, department, designation, salary, joining_date}`
 - `toUpdateJson()` — `{full_name, phone, department, designation, salary, joining_date, is_active}`
 
 ### Holiday

@@ -309,9 +309,7 @@ class AdminTeachersScreen extends ConsumerWidget {
 
     final nameCtrl = TextEditingController(text: existing?.fullName ?? '');
     final emailCtrl = TextEditingController(text: existing?.email ?? '');
-    final passwordCtrl = TextEditingController(
-      text: isEdit ? '' : defaultUserPassword,
-    );
+    final passwordCtrl = TextEditingController();
     final phoneCtrl = TextEditingController(text: existing?.phone ?? '');
     final selectedSubjectIds = <String>{};
     bool saving = false;
@@ -438,7 +436,8 @@ class AdminTeachersScreen extends ConsumerWidget {
                         ? null
                         : () async {
                             if (nameCtrl.text.trim().isEmpty ||
-                                emailCtrl.text.trim().isEmpty) {
+                                emailCtrl.text.trim().isEmpty ||
+                                (!isEdit && passwordCtrl.text.trim().isEmpty)) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
                                 const SnackBar(
                                   content: Text('Please fill required fields'),
@@ -660,7 +659,7 @@ class AdminTeachersScreen extends ConsumerWidget {
 
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController();
-    final passwordCtrl = TextEditingController(text: defaultUserPassword);
+    final passwordCtrl = TextEditingController();
     final phoneCtrl = TextEditingController();
     final selectedSubjectIds = <String>{};
     var saving = false;
@@ -750,7 +749,18 @@ class AdminTeachersScreen extends ConsumerWidget {
             CustomButton(
               label: 'Add',
               loading: saving,
-              onPressed: nameCtrl.text.isNotEmpty && emailCtrl.text.isNotEmpty ? () async {
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty ||
+                    emailCtrl.text.trim().isEmpty ||
+                    passwordCtrl.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill required fields'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
                 setDialogState(() => saving = true);
                 try {
                   final teacher = await repo.createTeacher({
@@ -784,7 +794,7 @@ class AdminTeachersScreen extends ConsumerWidget {
                     );
                   }
                 }
-              } : null,
+              },
             ),
           ],
         ),

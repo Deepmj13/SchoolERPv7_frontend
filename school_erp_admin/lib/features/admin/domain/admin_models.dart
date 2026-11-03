@@ -120,10 +120,10 @@ class Student {
     );
   }
 
-  Map<String, dynamic> toCreateJson() => {
+  Map<String, dynamic> toCreateJson({required String password}) => {
         'full_name': fullName,
         'email': email,
-        'password': defaultUserPassword,
+        'password': password,
         'class_id': classId,
         'roll_number': rollNumber,
         'parent_name': parentName,
@@ -168,10 +168,10 @@ class Teacher {
     );
   }
 
-  Map<String, dynamic> toCreateJson() => {
+  Map<String, dynamic> toCreateJson({required String password}) => {
         'full_name': fullName,
         'email': email,
-        'password': defaultUserPassword,
+        'password': password,
         'phone': phone,
       };
 
@@ -659,9 +659,9 @@ class StaffMember {
         isActive: json['is_active'] as bool? ?? true,
       );
 
-  Map<String, dynamic> toCreateJson() => {
+  Map<String, dynamic> toCreateJson({required String password}) => {
         'email': email,
-        'password': defaultUserPassword,
+        'password': password,
         'full_name': fullName,
         'phone': phone,
         'department': department,
@@ -710,8 +710,6 @@ class Holiday {
   bool get isHoliday => type == 'holiday';
   String get displayType => isHoliday ? 'Holiday' : 'Event';
 }
-
-const String defaultUserPassword = 'ChangeMe@123';
 
 class FeePayment {
   final String id;

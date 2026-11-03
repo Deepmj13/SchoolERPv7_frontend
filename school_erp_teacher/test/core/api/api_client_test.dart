@@ -10,26 +10,30 @@ import '../../helpers/fake_storage_service.dart';
 void main() {
   group('ApiClient', () {
     late FakeStorageService storage;
-    late ApiClient client;
-    late http.Client mockClient;
 
     setUp(() {
       storage = FakeStorageService();
-      mockClient = http.Client();
-    });
-
-    tearDown(() {
-      client.dispose();
     });
 
     test('GET request includes auth headers when token present', () async {
       await storage.saveToken('my-token');
-      client = ApiClient(storage: storage, client: mockClient);
+      late http.Request captured;
+      final mock = MockClient((request) async {
+        captured = request;
+        return http.Response(
+          jsonEncode({'ok': true}),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+      final client = ApiClient(storage: storage, client: mock);
+      addTearDown(client.dispose);
 
-      expect(
-        () => client.get('/test'),
-        throwsA(isA<ApiException>()),
-      );
+      final result = await client.get('/test');
+
+      expect(captured.url.toString(), '${Endpoints.baseUrl}/test');
+      expect(captured.headers['Authorization'], 'Bearer my-token');
+      expect(result, {'ok': true});
     });
 
     test('ApiException stores status code and message', () {
@@ -40,27 +44,31 @@ void main() {
     });
 
     test('GET request works without token', () async {
-      client = ApiClient(storage: storage, client: mockClient);
+      late http.Request captured;
+      final mock = MockClient((request) async {
+        captured = request;
+        return http.Response(
+          '{}',
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+      final client = ApiClient(storage: storage, client: mock);
+      addTearDown(client.dispose);
 
-      expect(
-        () => client.get('/test'),
-        throwsA(isA<ApiException>()),
-      );
+      await client.get('/test');
+
+      expect(captured.headers.containsKey('Authorization'), isFalse);
     });
   });
 
   group('ApiClient 401 handling', () {
     late FakeStorageService storage;
-    late ApiClient client;
     var unauthorizedCalls = 0;
 
     setUp(() {
       storage = FakeStorageService();
       unauthorizedCalls = 0;
-    });
-
-    tearDown(() {
-      client.dispose();
     });
 
     test('401 with no stored token surfaces the server error message', () async {
@@ -74,8 +82,9 @@ void main() {
         }
         return http.Response('Not found', 404);
       });
-      client = ApiClient(storage: storage, client: mock)
+      final client = ApiClient(storage: storage, client: mock)
         ..onUnauthorized = () => unauthorizedCalls++;
+      addTearDown(client.dispose);
 
       try {
         await client.post(Endpoints.login,
@@ -105,8 +114,9 @@ void main() {
           headers: {'content-type': 'application/json'},
         );
       });
-      client = ApiClient(storage: storage, client: mock)
+      final client = ApiClient(storage: storage, client: mock)
         ..onUnauthorized = () => unauthorizedCalls++;
+      addTearDown(client.dispose);
 
       try {
         await client.get('/secured/data');

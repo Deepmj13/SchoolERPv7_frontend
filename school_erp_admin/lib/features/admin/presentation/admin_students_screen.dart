@@ -348,9 +348,7 @@ class AdminStudentsScreen extends ConsumerWidget {
 
     final nameCtrl = TextEditingController(text: existing?.fullName ?? '');
     final emailCtrl = TextEditingController(text: existing?.email ?? '');
-    final passwordCtrl = TextEditingController(
-      text: isEdit ? '' : defaultUserPassword,
-    );
+    final passwordCtrl = TextEditingController();
     final rollCtrl = TextEditingController(text: existing?.rollNumber ?? '');
     final parentNameCtrl = TextEditingController(text: existing?.parentName ?? '');
     final parentPhoneCtrl = TextEditingController(text: existing?.parentPhone ?? '');
@@ -481,7 +479,8 @@ class AdminStudentsScreen extends ConsumerWidget {
                         : () async {
                             if (nameCtrl.text.trim().isEmpty ||
                                 emailCtrl.text.trim().isEmpty ||
-                                selectedClass == null) {
+                                selectedClass == null ||
+                                (!isEdit && passwordCtrl.text.trim().isEmpty)) {
                               ScaffoldMessenger.of(ctx).showSnackBar(
                                 const SnackBar(
                                   content: Text('Please fill required fields'),
@@ -692,7 +691,6 @@ class AdminStudentsScreen extends ConsumerWidget {
                   label: 'Password',
                   required: true,
                   obscureText: true,
-                  initialValue: defaultUserPassword,
                 ),
               FormFieldConfig(
                 key: 'class_id',
